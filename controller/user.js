@@ -4,6 +4,7 @@ const {
   getReasonPhrase,
   getStatusCode,
 } = require("http-status-codes");
+
 const User = require("../models/auth");
 
 const profile = async (req, res) => {
@@ -49,23 +50,31 @@ const profile = async (req, res) => {
   }
 };
 
+const Profileupdate = (req, res) => {
+  if (!req.body) {
+    return res.status(400).send({ message: "Data to update can not be empty" });
+  }
 
-const updateProfile = async (req,res) => {
-    const id = req.params.id;
-      
-    // Get the updated user information from the request body
-    const updatedUser = req.body;
-  
-    // Update the user in the database
-    console.log(res.body)
-    await User.findByIdAndUpdate(req.params.id, req.body);
-  
-    // Send a success response
-    res.status(200).json({
-      message: 'User updated successfully'
+  const id = req.params.id;
+  userinfo
+    .findByIdAndUpdate(
+      id,
+      { $set: { ...req.body } },
+      { useFindAndModify: false }
+    )
+    .then((data) => {
+      if (!data) {
+        res.status(404).send({
+          message: `Cannot Update user with ${id}. Maybe user not found!`,
+        });
+      } else {
+        res.send(data);
+      }
+    })
+    .catch((err) => {
+      res.status(500).send({ message: "Error Update user information" });
     });
-}
-
+};
 
 const updateUser = async (req, res) => {
   const { id } = req.params;
@@ -80,45 +89,11 @@ const updateUser = async (req, res) => {
 
     const user = await User.findOne({ _id: id });
 
-    userInfo = {
-      data: {
-        exp: 1695973022,
-        iat: 1695969422,
-        auth_time: 1695969416,
-        jti: "3a52da07-ad3c-4c1d-a830-76a650c01c6d",
-        iss: "https://ecwg-ss-dt.inadev.net/client-keycloak/auth/realms/iacc-dev",
-        sub: "07a6334f-a41c-4bb3-ae74-a601a2a3328f",
-        typ: "Bearer",
-        azp: "user-auth-dev",
-        nonce: "cXh2UnVzajg5M2RVeGdlQ3pUU1BnNzRXQmV1ZUE4bG9acVJjSXQuS2ZDY0pE",
-        session_state: "27dc53ca-a9ee-487d-8b8e-735d52fb2679",
-        acr: "1",
-        "allowed-origins": [
-          "https://iacc-enforcement-demo.inadev.net/*",
-          "https://iacc-enforcement-dev.inadev.net/*",
-          "iacc-enforcement-dev.inadev.net",
-          "http://localhost:4200/*",
-        ],
-        realm_access: {
-          roles: ["ms_iacc_admin", "offline_access"],
-        },
-        scope: "openid email profile",
-        sid: "27dc53ca-a9ee-487d-8b8e-735d52fb2679",
-        email_verified: true,
-        name: "RBAC Test 2 User",
-        preferred_username: "11test2@yopmail.com",
-        given_name: "RBAC Test 2",
-        family_name: "User",
-        email: "11test2@yopmail.com",
-      },
-    };
-
     var myquery = { _id: id };
-    var newvalues = {name: "Mickey", address: "Canyon 123" } 
 
     if (user) {
       try {
-        User.updateOne(myquery, newvalues).then(
+        User.updateOne(myquery, { $set: req.body }, { upsert: true }).then(
           (data, err) => {
             if (err) res.status(StatusCodes.BAD_REQUEST).json({ err });
             else
@@ -126,7 +101,7 @@ const updateUser = async (req, res) => {
                 message: "User Update Successfully",
                 status: ReasonPhrases.OK,
                 statusCode: StatusCodes.OK,
-                data: userInfo.data,
+                data: data,
               });
           }
         );
@@ -148,4 +123,5 @@ const updateUser = async (req, res) => {
     res.status(StatusCodes.BAD_REQUEST).json({ error });
   }
 };
-module.exports = { profile, updateUser,updateProfile };
+
+module.exports = { profile, updateUser, Profileupdate };

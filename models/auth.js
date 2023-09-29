@@ -23,15 +23,15 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       index: true,
-   },
-   email: {
+    },
+    email: {
       type: String,
       require: true,
       trim: true,
       unique: true,
       lowercase: true,
       index: true,
-   },
+    },
     hash_password: {
       type: String,
       require: true,
@@ -47,10 +47,20 @@ const userSchema = new mongoose.Schema(
     profilePicture: {
       type: String,
     },
-   
+    address: {
+      street: String,
+      city: String,
+      state: String,
+      postalCode: String,
+      country: String,
+    },
+    socialMedia: {
+      facebook: String,
+      twitter: String,
+      instagram: String,
+    },
   },
-  { timestamps: true },
-  
+  { timestamps: true }
 );
 //For get fullName from when we get data from database
 userSchema.virtual("fullName").get(function () {
@@ -62,3 +72,4 @@ userSchema.method({
   },
 });
 module.exports = mongoose.model("User", userSchema);
+

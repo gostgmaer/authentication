@@ -8,6 +8,7 @@ const User = require("../models/auth");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const shortid = require("shortid");
+
 const signUp = async (req, res) => {
   const { firstName, lastName, email, password, username } = req.body;
   if (!firstName || !lastName || !email || !password || !username) {
@@ -45,14 +46,15 @@ const signUp = async (req, res) => {
     });
   } else {
     User.create(userData).then((data, err) => {
-      console.log(data);
+    
       if (err) res.status(StatusCodes.BAD_REQUEST).json({ err });
-      else
+      else {
         res.status(StatusCodes.CREATED).json({
           message: "User created Successfully",
           status: ReasonPhrases.CREATED,
           statusCode: StatusCodes.CREATED,
         });
+      }
     });
   }
 };
@@ -69,8 +71,14 @@ const signIn = async (req, res) => {
 
     const user = await User.findOne({ email: req.body.email });
 
+
     if (user) {
-      if (user.authenticate(req.body.password)) {
+
+      const isPasswordValid = await bcrypt.compare(req.body.password, user.hash_password);
+
+     
+
+      if (isPasswordValid) {
         const token = jwt.sign(
           { user_id: user._id, role: user.role, email: user.email },
           process.env.JWT_SECRET,
@@ -83,8 +91,7 @@ const signIn = async (req, res) => {
         });
       } else {
         res.status(StatusCodes.UNAUTHORIZED).json({
-          message: "Something went wrong!",
-
+          message: "Password is invalid!",
           statusCode: StatusCodes.UNAUTHORIZED,
           status: ReasonPhrases.UNAUTHORIZED,
         });
@@ -97,7 +104,45 @@ const signIn = async (req, res) => {
       });
     }
   } catch (error) {
-    res.status(StatusCodes.BAD_REQUEST).json({ error });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Somwthing wants wrong",
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+    });
   }
 };
-module.exports = { signUp, signIn };
+
+const resetPassword = async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({
+      email,
+    });
+
+    if (!user) {
+      // Token is invalid or expired
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    // Hash the new password before updating
+    const hashedPassword = await bcrypt.hash(newPassword, 10); // 10 is the saltRounds
+
+    // Update the user's password and clear reset token fields
+    user.hash_password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    // Save the user document with the new password
+    await user.save();
+
+    // Password reset successful
+    return res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    // Handle error
+    console.error("Error resetting password:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports = { signUp, signIn, resetPassword };
