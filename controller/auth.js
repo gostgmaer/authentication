@@ -8,6 +8,7 @@ const User = require("../models/auth");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const shortid = require("shortid");
+const { transporter } = require("../mail/mailer");
 
 const signUp = async (req, res) => {
   const { firstName, lastName, email, password, username } = req.body;
@@ -46,9 +47,24 @@ const signUp = async (req, res) => {
     });
   } else {
     User.create(userData).then((data, err) => {
-    
       if (err) res.status(StatusCodes.BAD_REQUEST).json({ err });
       else {
+        // const mailOptions = {
+        //   from: 'your_email@gmail.com', // Your email address
+        //   to: email, // The user's email address
+        //   subject: 'Welcome to Your App', // Email subject
+        //   text: `Hello ${username},\n\nWelcome to Your App!`, // Email text
+        // };
+
+        // // Send the email
+        // transporter.sendMail(mailOptions, (error, info) => {
+        //   if (error) {
+        //     console.error('Error sending email:', error);
+        //   } else {
+        //     console.log('Email sent:', info.response);
+        //   }
+        // });
+
         res.status(StatusCodes.CREATED).json({
           message: "User created Successfully",
           status: ReasonPhrases.CREATED,
@@ -71,12 +87,11 @@ const signIn = async (req, res) => {
 
     const user = await User.findOne({ email: req.body.email });
 
-
     if (user) {
-
-      const isPasswordValid = await bcrypt.compare(req.body.password, user.hash_password);
-
-     
+      const isPasswordValid = await bcrypt.compare(
+        req.body.password,
+        user.hash_password
+      );
 
       if (isPasswordValid) {
         const token = jwt.sign(
@@ -135,6 +150,25 @@ const resetPassword = async (req, res) => {
 
     // Save the user document with the new password
     await user.save();
+    const mailOptions = {
+      from: "gostgaming08@gmail.com", // Your email address
+      to: "kishor81160@gmail.com", // The user's email address
+      subject: "Welcome to Your App", // Email subject
+      text: `Hello ${user.username},\n\nWelcome to Your App!`, // Email text
+    };
+
+    // Send the email
+    try {
+      transporter.send(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending email:", error);
+        } else {
+          console.log("Email sent:", info.response);
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
 
     // Password reset successful
     return res.status(200).json({ message: "Password reset successfully" });
