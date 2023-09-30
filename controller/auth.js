@@ -72,9 +72,8 @@ const signUp = async (req, res) => {
         let mailBody = {
           body: {
             name: data.fullName,
-            
-            intro:
-              `Welcome to MyWeb ! We're very excited to have you on board. your username is: ${data.username}`,
+
+            intro: `Welcome to MyWeb ! We're very excited to have you on board. your username is: ${data.username}`,
             action: {
               instructions: "To get started with MyWeb, please click here:",
               button: {
@@ -140,6 +139,12 @@ const signIn = async (req, res) => {
           process.env.JWT_SECRET,
           { expiresIn: "30d" }
         );
+        res.cookie("accessToken", token, {
+          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+          httpOnly: true, // Cookie accessible only via HTTP(S)
+          secure: true, // Cookie only sent over HTTPS in production
+          sameSite: "strict", // Protect against CSRF attacks
+        });
         const { _id, firstName, lastName, email, role, fullName } = user;
         res.status(StatusCodes.OK).json({
           token,
