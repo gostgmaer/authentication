@@ -1,5 +1,5 @@
 const { check, validationResult } = require("express-validator");
-const { StatusCodes } = require("http-status-codes");
+const { StatusCodes,ReasonPhrases } = require("http-status-codes");
 
 const validateSignUpRequest = [
   check("firstName").notEmpty().withMessage("First Name is required"),

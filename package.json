@@ -24,6 +24,7 @@
     "shortid": "^2.2.16",
     "swagger-autogen": "^2.23.6",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0"
+    "swagger-ui-express": "^5.0.0",
+    "zipyai": "^1.7.3"
   }
 }
