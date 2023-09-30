@@ -8,7 +8,19 @@ const User = require("../models/auth");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const shortid = require("shortid");
-const { transporter } = require("../mail/mailer");
+// const { transporter } = require("../mail/mailer");
+const nodemailer = require("nodemailer");
+const Mailgen = require("mailgen");
+
+let config = {
+  service: "gmail",
+  auth: {
+    user: "kishor81160@gmail.com",
+    pass: "xvsy rvxv bktb zjld",
+  },
+};
+
+let transporter = nodemailer.createTransport(config);
 
 const signUp = async (req, res) => {
   const { firstName, lastName, email, password, username } = req.body;
@@ -33,6 +45,14 @@ const signUp = async (req, res) => {
   const user = await User.findOne({ email });
   const userId = await User.findOne({ username });
 
+  let MailGenerator = new Mailgen({
+    theme: "default",
+    product: {
+      name: "kishor",
+      link: "https://google.com",
+    },
+  });
+
   if (user) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       message: `User with email ${user.email} already registered`,
@@ -49,27 +69,48 @@ const signUp = async (req, res) => {
     User.create(userData).then((data, err) => {
       if (err) res.status(StatusCodes.BAD_REQUEST).json({ err });
       else {
-        // const mailOptions = {
-        //   from: 'your_email@gmail.com', // Your email address
-        //   to: email, // The user's email address
-        //   subject: 'Welcome to Your App', // Email subject
-        //   text: `Hello ${username},\n\nWelcome to Your App!`, // Email text
-        // };
+        let mailBody = {
+          body: {
+            name: data.fullName,
+            
+            intro:
+              `Welcome to MyWeb ! We're very excited to have you on board. your username is: ${data.username}`,
+            action: {
+              instructions: "To get started with MyWeb, please click here:",
+              button: {
+                color: "#22BC66", // Optional action button color
+                text: "Login your account",
+                link: "https://mailgen.js/confirm?s=d9729feb74992cc3482b350163a1a010",
+              },
+            },
+            outro:
+              "Need help, or have questions? Just reply to this email, we'd love to help.",
+          },
+        };
+        let mail = MailGenerator.generate(mailBody);
+        const mailOptions = {
+          from: "kishor81160@gmail.com", // Your email address
+          to: data.email, // The user's email address
+          subject: "Account has been Created", // Email subject
+          html: mail, // Email text
+        };
 
-        // // Send the email
-        // transporter.sendMail(mailOptions, (error, info) => {
-        //   if (error) {
-        //     console.error('Error sending email:', error);
-        //   } else {
-        //     console.log('Email sent:', info.response);
-        //   }
-        // });
-
-        res.status(StatusCodes.CREATED).json({
-          message: "User created Successfully",
-          status: ReasonPhrases.CREATED,
-          statusCode: StatusCodes.CREATED,
-        });
+        transporter
+          .sendMail(mailOptions)
+          .then(() => {
+            res.status(StatusCodes.CREATED).json({
+              message: "User created Successfully",
+              status: ReasonPhrases.CREATED,
+              statusCode: StatusCodes.CREATED,
+            });
+          })
+          .catch((error) => {
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+              message: "Internal Server Error",
+              statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+              status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+            });
+          });
       }
     });
   }
@@ -135,6 +176,30 @@ const resetPassword = async (req, res) => {
       email,
     });
 
+    let MailGenerator = new Mailgen({
+      theme: "default",
+      product: {
+        name: "kishor",
+        link: "https://google.com",
+      },
+    });
+
+    let response = {
+      body: {
+        name: user.firstName,
+        intro: "Password has been reset",
+
+        outro: "Please login to your account",
+      },
+    };
+    let mail = MailGenerator.generate(response);
+    const mailOptions = {
+      from: "kishor81160@gmail.com", // Your email address
+      to: "gostgaming08@gmail.com", // The user's email address
+      subject: "Password has been reset", // Email subject
+      html: mail, // Email text
+    };
+
     if (!user) {
       // Token is invalid or expired
       return res.status(400).json({ message: "Invalid or expired token" });
@@ -150,32 +215,35 @@ const resetPassword = async (req, res) => {
 
     // Save the user document with the new password
     await user.save();
-    const mailOptions = {
-      from: "gostgaming08@gmail.com", // Your email address
-      to: "kishor81160@gmail.com", // The user's email address
-      subject: "Welcome to Your App", // Email subject
-      text: `Hello ${user.username},\n\nWelcome to Your App!`, // Email text
-    };
 
     // Send the email
-    try {
-      transporter.send(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Error sending email:", error);
-        } else {
-          console.log("Email sent:", info.response);
-        }
+    transporter
+      .sendMail(mailOptions)
+      .then(() => {
+        res.status(StatusCodes.OK).json({
+          message: "Password reset successfully",
+          statusCode: StatusCodes.OK,
+          status: ReasonPhrases.OK,
+        });
+      })
+      .catch((error) => {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          message: "Internal Server Error",
+          statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+          status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+        });
       });
-    } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" });
-    }
 
     // Password reset successful
-    return res.status(200).json({ message: "Password reset successfully" });
+    // return res.status(200).json({ message: "Password reset successfully" });
   } catch (error) {
     // Handle error
-    console.error("Error resetting password:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Somwthing wants wrong",
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+    });
   }
 };
 
