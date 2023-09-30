@@ -18,20 +18,19 @@ const profile = async (req, res) => {
   } else {
     try {
       const userId = await User.findOne({ _id: id });
-      console.log(userId);
-      const { firstName, lastName, email, password, username } = userId._doc;
-      if (userId.id) {
+
+    
+
+      if (userId. id) {
+        const resdata = userId._doc
+        delete resdata.hash_password;
+        delete resdata._id;
+        delete resdata.__v;
         return res.status(StatusCodes.OK).json({
-          message: `found`,
+          message: `Profile data has been Loaded Successfully!`,
           statusCode: StatusCodes.OK,
           status: ReasonPhrases.OK,
-          result: {
-            firstName,
-            lastName,
-            email,
-            password,
-            username,
-          },
+          result: resdata,
         });
       } else {
         return res.status(StatusCodes.NOT_FOUND).json({
@@ -41,12 +40,39 @@ const profile = async (req, res) => {
         });
       }
     } catch (error) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Internal server error`,
+        statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+        status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+};
+
+const getusers = async (req, res) => {
+  try {
+    const users = await User.find();
+
+    if (users) {
+      return res.status(StatusCodes.OK).json({
+        message: `Users data has been Loaded Successfully!`,
+        statusCode: StatusCodes.OK,
+        status: ReasonPhrases.OK,
+        result: users,
+      });
+    } else {
       return res.status(StatusCodes.NOT_FOUND).json({
-        message: `No information found for given id`,
+        message: `No information found`,
         statusCode: StatusCodes.NOT_FOUND,
         status: ReasonPhrases.NOT_FOUND,
       });
     }
+  } catch (error) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      message: `No information found`,
+      statusCode: StatusCodes.NOT_FOUND,
+      status: ReasonPhrases.NOT_FOUND,
+    });
   }
 };
 
@@ -124,4 +150,4 @@ const updateUser = async (req, res) => {
   }
 };
 
-module.exports = { profile, updateUser, Profileupdate };
+module.exports = { profile, updateUser, Profileupdate, getusers };
