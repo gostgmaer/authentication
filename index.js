@@ -3,12 +3,19 @@ require("dotenv").config();
 const connectDB = require("./db/connect");
 const app = express();
 var cors = require("cors");
-
+var session = require("express-session");
 const authRouter = require("./routes/auth");
+const corsOpts = {
+  origin: "*",
+
+  methods: ["GET", "POST", "PUT"],
+
+  allowedHeaders: ["Content-Type"],
+};
 app.use(cors());
 app.use(express.json());
 app.use("/api", authRouter);
-
+// authRouter.use(session({secret:process.env.JWT_SECRET}))
 app.get("/", (req, res) => {
   res.send("APP is working!");
 });
