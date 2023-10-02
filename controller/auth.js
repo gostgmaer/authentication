@@ -139,16 +139,41 @@ const signIn = async (req, res) => {
           process.env.JWT_SECRET,
           { expiresIn: "30d" }
         );
-        res.cookie("accessToken", token, {
-          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-          httpOnly: true, // Cookie accessible only via HTTP(S)
-          secure: true, // Cookie only sent over HTTPS in production
-          sameSite: "strict", // Protect against CSRF attacks
-        });
-        const { _id, firstName, lastName, email, role, fullName } = user;
+        // res.cookie("accessToken", token, {
+        //   originalMaxAge:30 * 24 * 60 * 60 * 1000,
+        //   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+        //   httpOnly: true, // Cookie accessible only via HTTP(S)
+        //   secure: true, // Cookie only sent over HTTPS in production
+        //   sameSite: "strict",
+        //    // Protect against CSRF attacks
+        // });
+
+        const { _id, firstName, lastName, email, role, fullName, username } =
+          user;
+        req.session.user = {
+          user_id: _id,
+          firstName,
+          lastName,
+          email,
+          role,
+          fullName,
+          username,
+        };
+        req.session.token = token;
         res.status(StatusCodes.OK).json({
           token,
-          user: { user_id: _id, firstName, lastName, email, role, fullName },
+          user: {
+            user_id: _id,
+            firstName,
+            lastName,
+            email,
+            role,
+            fullName,
+            username,
+          },
+          message: "Login Success!",
+          statusCode: StatusCodes.OK,
+          status: ReasonPhrases.OK,
         });
       } else {
         res.status(StatusCodes.UNAUTHORIZED).json({
@@ -159,14 +184,14 @@ const signIn = async (req, res) => {
       }
     } else {
       res.status(StatusCodes.BAD_REQUEST).json({
-        message: "User does not exist..!",
+        message: "Inavalid User Name!",
         statusCode: StatusCodes.BAD_REQUEST,
         status: ReasonPhrases.BAD_REQUEST,
       });
     }
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Somwthing wants wrong",
+      message: "Internal Server error!",
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
@@ -252,4 +277,44 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { signUp, signIn, resetPassword };
+const varifyLogin = async (req, res) => {
+  if (req.session) {
+    const parsedObject = JSON.parse(
+      Object.values(req?.sessionStore?.sessions)[0]
+    );
+    res.status(StatusCodes.OK).json({
+      message: "Authenticated",
+      statusCode: StatusCodes.OK,
+      status: ReasonPhrases.OK,
+      token: parsedObject.token,
+      user: parsedObject.user,
+    });
+  } else {
+    res.status(StatusCodes.UNAUTHORIZED).json({
+      message: "Authentication failed",
+      statusCode: StatusCodes.UNAUTHORIZED,
+      status: ReasonPhrases.UNAUTHORIZED,
+    });
+  }
+};
+
+const singout = async (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: "Internal Server Error",
+        statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+        status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+        data: err,
+      });
+    } else {
+     
+      res.status(StatusCodes.OK).json({
+        message: "Logout Success",
+        statusCode: StatusCodes.OK,
+        status: ReasonPhrases.OK,
+      });
+    }
+  });
+};
+module.exports = { signUp, signIn, resetPassword, varifyLogin, singout };
