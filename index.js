@@ -12,6 +12,16 @@ const corsOpts = {
 
   allowedHeaders: ["Content-Type"],
 };
+
+const sessionMiddleware = session({
+  secret: process.env.JWT_SECRET,
+  saveUninitialized: false,
+  resave: false,
+  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
+});
+
+app.use(sessionMiddleware);
+
 app.use(cors());
 app.use(express.json());
 app.use("/api", authRouter);

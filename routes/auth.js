@@ -7,8 +7,12 @@ const {
   signUp,
   signIn,
   resetPassword,
-  varifyLogin,singout,isAuthenticated
+  varifyLogin,
+  singout,
+  isAuthenticated,
+  protectedRoute,
 } = require("../controller/auth");
+const { authenticateToken } = require("../middleware/middleware");
 const { profile, updateUser, getusers } = require("../controller/user");
 const {
   isRequestValidated,
@@ -16,21 +20,18 @@ const {
   validateSignIpRequest,
 } = require("../validators/auth");
 
-
 // const store = new MongoDBStore({
 //   mongooseConnection: mongoose.connection,
 //   collection: 'sessions',
 // });
 
-router.use(
-  session({
-    secret: process.env.JWT_SECRET,
-    saveUninitialized: false,
-    resave: false,
-    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
-    // store: store
-  })
-);
+// const sessionMiddleware = session({
+//   secret: process.env.JWT_SECRET,
+//   saveUninitialized: false,
+//   resave: false,
+//   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
+//   // You can specify a session store here if needed.
+// });
 
 router.route("/signin").post(validateSignIpRequest, isRequestValidated, signIn);
 router.route("/signout").post(singout);
@@ -41,6 +42,8 @@ router.route("/users/:id").put(updateUser);
 router.route("/reset-password").post(resetPassword);
 router.route("/session").post(isAuthenticated);
 router.route("/verify").get(varifyLogin);
+router.route("/protected").get(protectedRoute);
 router.route("/profile/:id").get(profile);
+router.route("/protected/resource").get(authenticateToken);
 
 module.exports = router;

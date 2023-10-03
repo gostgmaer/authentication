@@ -12,6 +12,18 @@ const shortid = require("shortid");
 const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
 
+const { promisify } = require("util");
+const redis = require("redis");
+
+const redisClient = redis.createClient();
+const asyncGet = promisify(redisClient.get).bind(redisClient);
+
+// Save the token on the server
+function saveTokenToServer(userId, token) {
+  // Store the token in Redis with an expiration time
+  redisClient.setex(userId, 3600, token); // Expires in 1 hour (in seconds)
+}
+
 let config = {
   service: "gmail",
   auth: {
@@ -21,6 +33,8 @@ let config = {
 };
 
 let transporter = nodemailer.createTransport(config);
+
+var session;
 
 const signUp = async (req, res) => {
   const { firstName, lastName, email, password, username } = req.body;
@@ -140,18 +154,20 @@ const signIn = async (req, res) => {
           { expiresIn: "30d" }
         );
 
-        // req.session.cookie({
-        //   originalMaxAge:30 * 24 * 60 * 60 * 1000,
-        //   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-        //   httpOnly: true, // Cookie accessible only via HTTP(S)
-          
-        //   sameSite: "strict",
-        //    // Protect against CSRF attacks
-        // });
+        // a variable to save a session
+
+        // session = req.session;
+
+        res.cookie("accessToken", token, {
+          maxAge: 3600000, // Cookie expires in 1 hour (in milliseconds)
+          httpOnly: true, // Cookie is accessible only through HTTP (not JavaScript)
+        });
 
         const { _id, firstName, lastName, email, role, fullName, username } =
           user;
-        req.session.username = username;
+
+        // req.session.token = token;
+
         res.status(StatusCodes.OK).json({
           token,
           user: {
@@ -294,26 +310,7 @@ function isAuthenticated(req, res) {
   }
 }
 
-const varifyLogin = async (req,res) => {
-  // isAuthenticated();
-  // if (req.session.user) {
-  //   // const parsedObject = JSON.parse(
-  //   //   Object.values(req?.sessionStore?.sessions)[0]
-  //   // );
-  //   res.status(StatusCodes.OK).json({
-  //     message: "Authenticated",
-  //     statusCode: StatusCodes.OK,
-  //     status: ReasonPhrases.OK,
-  //     user: req.session.user,
-  //   });
-  // } else {
-  //   res.status(StatusCodes.UNAUTHORIZED).json({
-  //     message: "Authentication failed",
-  //     statusCode: StatusCodes.UNAUTHORIZED,
-  //     status: ReasonPhrases.UNAUTHORIZED,
-  //   });
-  // }
-
+const varifyLogin = async (req, res) => {
   try {
     if (req.session) {
       res.status(StatusCodes.OK).json({
@@ -353,9 +350,43 @@ const singout = async (req, res) => {
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
   }
- 
-
 };
+
+const protectedRoute = (req, res) => {
+  // Check if the user is authenticated by verifying the token from the session
+  const token = req.session.token;
+
+  // if (!token) {
+  //   res.status(StatusCodes.UNAUTHORIZED).json({
+  //     message: "Unauthorized",
+  //     statusCode: StatusCodes.UNAUTHORIZED,
+  //     status: ReasonPhrases.UNAUTHORIZED,
+  //   });
+  // }
+
+  try {
+    // Verify and decode the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // You can access user data from the decoded token here
+    const user = decoded;
+
+    // Proceed with the protected route logic
+    res.status(StatusCodes.OK).json({
+      message: "Authorized",
+      statusCode: StatusCodes.OK,
+      status: ReasonPhrases.OK,
+      user: req.session.username,
+    });
+  } catch (error) {
+    res.status(StatusCodes.UNAUTHORIZED).json({
+      message: "Unauthorized",
+      statusCode: StatusCodes.UNAUTHORIZED,
+      status: ReasonPhrases.UNAUTHORIZED,
+    });
+  }
+};
+
 module.exports = {
   signUp,
   isAuthenticated,
@@ -364,4 +395,5 @@ module.exports = {
   varifyLogin,
   singout,
   isAuthenticated,
+  protectedRoute,
 };
