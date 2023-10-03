@@ -7,15 +7,18 @@ const {
   signUp,
   signIn,
   resetPassword,
-  varifyLogin,singout,isAuthenticated,protectedRoute
+  varifyLogin,
+  singout,
+  isAuthenticated,
+  protectedRoute,
 } = require("../controller/auth");
+const { authenticateToken } = require("../middleware/middleware");
 const { profile, updateUser, getusers } = require("../controller/user");
 const {
   isRequestValidated,
   validateSignUpRequest,
   validateSignIpRequest,
 } = require("../validators/auth");
-
 
 // const store = new MongoDBStore({
 //   mongooseConnection: mongoose.connection,
@@ -41,5 +44,6 @@ router.route("/session").post(isAuthenticated);
 router.route("/verify").get(varifyLogin);
 router.route("/protected").get(protectedRoute);
 router.route("/profile/:id").get(profile);
+router.route("/protected/resource").get(authenticateToken);
 
 module.exports = router;
