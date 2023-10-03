@@ -151,7 +151,7 @@ const signIn = async (req, res) => {
 
         const { _id, firstName, lastName, email, role, fullName, username } =
           user;
-        req.session.username = username;
+          req.session.token = token;
         res.status(StatusCodes.OK).json({
           token,
           user: {
@@ -295,25 +295,6 @@ function isAuthenticated(req, res) {
 }
 
 const varifyLogin = async (req,res) => {
-  // isAuthenticated();
-  // if (req.session.user) {
-  //   // const parsedObject = JSON.parse(
-  //   //   Object.values(req?.sessionStore?.sessions)[0]
-  //   // );
-  //   res.status(StatusCodes.OK).json({
-  //     message: "Authenticated",
-  //     statusCode: StatusCodes.OK,
-  //     status: ReasonPhrases.OK,
-  //     user: req.session.user,
-  //   });
-  // } else {
-  //   res.status(StatusCodes.UNAUTHORIZED).json({
-  //     message: "Authentication failed",
-  //     statusCode: StatusCodes.UNAUTHORIZED,
-  //     status: ReasonPhrases.UNAUTHORIZED,
-  //   });
-  // }
-
   try {
     if (req.session) {
       res.status(StatusCodes.OK).json({
@@ -356,6 +337,30 @@ const singout = async (req, res) => {
  
 
 };
+
+const protectedRoute= (req, res) => {
+  // Check if the user is authenticated by verifying the token from the session
+  const token = req.session.token;
+
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    // Verify and decode the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // You can access user data from the decoded token here
+    const user = decoded;
+
+    // Proceed with the protected route logic
+    res.json({ message: "Access granted", user });
+  } catch (error) {
+    res.status(401).json({ error: "Token invalid" });
+  }
+}
+
+
 module.exports = {
   signUp,
   isAuthenticated,
@@ -363,5 +368,5 @@ module.exports = {
   resetPassword,
   varifyLogin,
   singout,
-  isAuthenticated,
+  isAuthenticated,protectedRoute
 };
