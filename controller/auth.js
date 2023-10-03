@@ -154,8 +154,9 @@ const signIn = async (req, res) => {
           { expiresIn: "30d" }
         );
         req.session.token = token;
+        req.session.sessionId = req.session.id;
         res.cookie("sessionId", req.session.id);
-        
+
         const { _id, firstName, lastName, email, role, fullName, username } =
           user;
 
