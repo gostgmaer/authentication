@@ -3,7 +3,12 @@ require("dotenv").config();
 const connectDB = require("./db/connect");
 const app = express();
 var cors = require("cors");
-var session = require("express-session");
+const session = require("express-session");
+const mongoSessionStore = require("connect-mongodb-session")(session);
+const sessionStore = new mongoSessionStore({
+  uri: "mongodb+srv://kishor811:c11yrbZf6MOdj8Ue@test.yrbiejx.mongodb.net/?retryWrites=true&w=majority",
+  collection: "sessions",
+});
 const authRouter = require("./routes/auth");
 const corsOpts = {
   origin: "*",
@@ -13,14 +18,17 @@ const corsOpts = {
   allowedHeaders: ["Content-Type"],
 };
 
-const sessionMiddleware = session({
-  secret: process.env.JWT_SECRET,
-  saveUninitialized: false,
-  resave: false,
-  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
-});
+app.use(
+  session({
+    store: sessionStore,
+    secret: process.env.JWT_SECRET,
+    resave: false,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 },
+    saveUninitialized: false,
+  })
+);
 
-app.use(sessionMiddleware);
+// app.use(sessionMiddleware);
 
 app.use(cors());
 app.use(express.json());

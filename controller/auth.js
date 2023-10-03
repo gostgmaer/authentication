@@ -153,15 +153,9 @@ const signIn = async (req, res) => {
           process.env.JWT_SECRET,
           { expiresIn: "30d" }
         );
-
-        // a variable to save a session
-
-        // session = req.session;
-
-        res.cookie("accessToken", token, {
-          maxAge: 3600000, // Cookie expires in 1 hour (in milliseconds)
-          httpOnly: true, // Cookie is accessible only through HTTP (not JavaScript)
-        });
+        req.session.token = token;
+        req.session.sessionId = req.session.id;
+        res.cookie("sessionId", req.session.id);
 
         const { _id, firstName, lastName, email, role, fullName, username } =
           user;
@@ -353,18 +347,24 @@ const singout = async (req, res) => {
 };
 
 const protectedRoute = (req, res) => {
-  // Check if the user is authenticated by verifying the token from the session
-  const token = req.session.token;
-
-  // if (!token) {
-  //   res.status(StatusCodes.UNAUTHORIZED).json({
-  //     message: "Unauthorized",
-  //     statusCode: StatusCodes.UNAUTHORIZED,
-  //     status: ReasonPhrases.UNAUTHORIZED,
-  //   });
-  // }
-
   try {
+    const token = req?.session?.token;
+
+  // //  const authHeader = req?.headers?.["authorization"];
+  //   if (!token) {
+  //     res.status(StatusCodes.UNAUTHORIZED).json({
+  //       message: "Unauthorized",
+  //       statusCode: StatusCodes.UNAUTHORIZED,
+  //       status: ReasonPhrases.UNAUTHORIZED,
+  //     });
+    
+    // if (!authHeader) {
+    //   res.status(StatusCodes.UNAUTHORIZED).json({
+    //     message: "Unauthorized",
+    //     statusCode: StatusCodes.UNAUTHORIZED,
+    //     status: ReasonPhrases.UNAUTHORIZED,
+    //   });
+    // }
     // Verify and decode the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -379,10 +379,10 @@ const protectedRoute = (req, res) => {
       user: req.session.username,
     });
   } catch (error) {
-    res.status(StatusCodes.UNAUTHORIZED).json({
-      message: "Unauthorized",
-      statusCode: StatusCodes.UNAUTHORIZED,
-      status: ReasonPhrases.UNAUTHORIZED,
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Internal Server Error",
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
   }
 };
