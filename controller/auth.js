@@ -346,38 +346,61 @@ const singout = async (req, res) => {
   }
 };
 
-const protectedRoute = (req, res) => {
+const protectedRoute = async (req, res) => {
   try {
-    const token = req?.session?.token;
-
-  // //  const authHeader = req?.headers?.["authorization"];
-  //   if (!token) {
-  //     res.status(StatusCodes.UNAUTHORIZED).json({
-  //       message: "Unauthorized",
-  //       statusCode: StatusCodes.UNAUTHORIZED,
-  //       status: ReasonPhrases.UNAUTHORIZED,
-  //     });
-    
-    // if (!authHeader) {
-    //   res.status(StatusCodes.UNAUTHORIZED).json({
-    //     message: "Unauthorized",
-    //     statusCode: StatusCodes.UNAUTHORIZED,
-    //     status: ReasonPhrases.UNAUTHORIZED,
-    //   });
-    // }
-    // Verify and decode the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // You can access user data from the decoded token here
-    const user = decoded;
-
+    const token = req?.headers?.authorization;
+    if (!token) {
+      res.status(StatusCodes.UNAUTHORIZED).json({
+        message: "Token Not Provided",
+        statusCode: StatusCodes.UNAUTHORIZED,
+        status: ReasonPhrases.UNAUTHORIZED,
+      });
+    }
+    const decodeduser = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decodeduser) {
+      res.status(StatusCodes.FORBIDDEN).json({
+        message: "Authorization Token is Not Valid",
+        statusCode: StatusCodes.FORBIDDEN,
+        status: ReasonPhrases.FORBIDDEN,
+      });
+    }
+    const user = await User.findOne({ _id: decodeduser.user_id });
+    if (!user) {
+      res.status(StatusCodes.UNAUTHORIZED).json({
+        message: "invalid user",
+        statusCode: StatusCodes.UNAUTHORIZED,
+        status: ReasonPhrases.UNAUTHORIZED,
+      });
+    } else {
+      const {
+        firstName,
+        lastName,
+        username,
+        fullName,
+        email,
+        contactNumber,
+        address,
+        socialMedia,
+        profilePicture,
+      } = user;
+      res.status(StatusCodes.OK).json({
+        message: "Authorized",
+        statusCode: StatusCodes.OK,
+        status: ReasonPhrases.OK,
+        user: {
+          firstName,
+          fullName,
+          lastName,
+          username,
+          email,
+          contactNumber,
+          address,
+          socialMedia,
+          profilePicture,
+        },
+      });
+    }
     // Proceed with the protected route logic
-    res.status(StatusCodes.OK).json({
-      message: "Authorized",
-      statusCode: StatusCodes.OK,
-      status: ReasonPhrases.OK,
-      user: req.session.username,
-    });
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: "Internal Server Error",
