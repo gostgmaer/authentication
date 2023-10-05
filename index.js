@@ -24,8 +24,9 @@ app.use(
   session({
     store: sessionStore,
     secret: process.env.JWT_SECRET,
+    httpOnly: false,
     resave: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 },
+    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 },
     saveUninitialized: false,
   })
 );
@@ -43,14 +44,10 @@ app.get("/api", (req, res) => {
   res.send("API is working!");
 });
 
-
 //app route
 app.use("/api", authRouter);
 app.use("/api", contactRoute);
 app.use("/api", resumeRoute);
-
-
-
 
 //Port and Connect to DB
 const port = process.env.PORT || 5000;

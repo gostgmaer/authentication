@@ -148,31 +148,31 @@ const signIn = async (req, res) => {
       );
 
       if (isPasswordValid) {
+        const LoggedinUser = await User.findOne(
+          { email: req.body.email },
+          "-__v -hash_password -createdAt -updatedAt"
+        );
+       
         const token = jwt.sign(
-          { user_id: user._id, role: user.role, email: user.email },
+          {
+            user_id: LoggedinUser.id,
+            role: LoggedinUser.role,
+            LoggedinUser: user.email,
+          },
           process.env.JWT_SECRET,
-          { expiresIn: "30d" }
+          {
+            expiresIn: "7d",
+          }
         );
         req.session.token = token;
         req.session.sessionId = req.session.id;
         res.cookie("sessionId", req.session.id);
 
-        const { _id, firstName, lastName, email, role, fullName, username } =
-          user;
-
         // req.session.token = token;
 
         res.status(StatusCodes.OK).json({
           token,
-          user: {
-            user_id: _id,
-            firstName,
-            lastName,
-            email,
-            role,
-            fullName,
-            username,
-          },
+          user: LoggedinUser,
           message: "Login Success!",
           statusCode: StatusCodes.OK,
           status: ReasonPhrases.OK,
