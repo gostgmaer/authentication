@@ -10,6 +10,7 @@ const sessionStore = new mongoSessionStore({
   collection: "sessions",
 });
 const authRouter = require("./routes/auth");
+const contactRoute = require("./routes/contact");
 const corsOpts = {
   origin: "*",
 
@@ -33,7 +34,9 @@ app.use(
 app.use(cors());
 app.use(express.json());
 app.use("/api", authRouter);
+app.use("/api", contactRoute);
 // authRouter.use(session({secret:process.env.JWT_SECRET}))
+
 app.get("/", (req, res) => {
   res.send("APP is working!");
 });

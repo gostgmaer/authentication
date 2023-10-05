@@ -29,18 +29,16 @@ const profile = async (req, res) => {
     });
   } else {
     try {
-      const userId = await User.findOne({ _id: id });
+      const userId = await User.findOne({ _id: id },'-hash_password -__v');
 
       if (userId.id) {
-        const resdata = userId._doc;
-        delete resdata.hash_password;
-        delete resdata._id;
-        delete resdata.__v;
+        // const resdata = userId._doc;
+    
         return res.status(StatusCodes.OK).json({
           message: `Profile data has been Loaded Successfully!`,
           statusCode: StatusCodes.OK,
           status: ReasonPhrases.OK,
-          result: resdata,
+          result: userId,
         });
       } else {
         return res.status(StatusCodes.NOT_FOUND).json({
@@ -61,7 +59,11 @@ const profile = async (req, res) => {
 
 const getusers = async (req, res) => {
   try {
-    const users = await User.find();
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+    const users = await User.find({},'-__v -hash_password')
+      .skip((page - 1) * limit)
+      .limit(limit).sort({ updatedAt: 1 });
 
     if (users) {
       return res.status(StatusCodes.OK).json({
@@ -180,7 +182,13 @@ const updateUser = async (req, res) => {
       try {
         User.updateOne(myquery, { $set: req.body }, { upsert: true }).then(
           (data, err) => {
-            if (err) res.status(StatusCodes.BAD_REQUEST).json({ err });
+            if (err)
+              res.status(StatusCodes.NOT_MODIFIED).json({
+                message: "Update Failed",
+                status: ReasonPhrases.NOT_MODIFIED,
+                statusCode: StatusCodes.NOT_MODIFIED,
+                cause: err,
+              });
             else {
               let mailBody = {
                 body: {
@@ -214,10 +222,11 @@ const updateUser = async (req, res) => {
           }
         );
       } catch (error) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-          message: "User does not exist..!",
-          statusCode: StatusCodes.BAD_REQUEST,
-          status: ReasonPhrases.BAD_REQUEST,
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          message: "Internal Server Error",
+          statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+          status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+          cause: error,
         });
       }
     } else {
@@ -228,8 +237,59 @@ const updateUser = async (req, res) => {
       });
     }
   } catch (error) {
-    res.status(StatusCodes.BAD_REQUEST).json({ error });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Internal Server Error",
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+      cause: error,
+    });
+  }
+};
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        message: "id is not provide",
+        statusCode: StatusCodes.BAD_REQUEST,
+        status: ReasonPhrases.BAD_REQUEST,
+      });
+    }
+
+    const user = await User.findOne({ _id: id });
+    if (!user) {
+      res.status(StatusCodes.NOT_FOUND).json({
+        message: "User does not exist..!",
+        statusCode: StatusCodes.NOT_FOUND,
+        status: ReasonPhrases.NOT_FOUND,
+      });
+    } else {
+      User.deleteOne({ _id: id }).then((data, err) => {
+        if (err)
+          res.status(StatusCodes.NOT_IMPLEMENTED).json({
+            message: "Delete Failed",
+            status: ReasonPhrases.NOT_IMPLEMENTED,
+            statusCode: StatusCodes.NOT_IMPLEMENTED,
+            cause: err,
+          });
+        else {
+          res.status(StatusCodes.OK).json({
+            message: "Delete Success",
+            status: ReasonPhrases.OK,
+            statusCode: StatusCodes.OK,
+            data: data,
+          });
+        }
+      });
+    }
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Internal Server Error",
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+      cause: error,
+    });
   }
 };
 
-module.exports = { profile, updateUser, Profileupdate, getusers };
+module.exports = { profile, updateUser, Profileupdate, getusers,deleteUser };
