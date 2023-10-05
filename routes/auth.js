@@ -10,7 +10,7 @@ const {
   varifyLogin,
   singout,
   isAuthenticated,
-  protectedRoute,
+  protectedRoute,varifySession
 } = require("../controller/auth");
 const { authenticateToken } = require("../middleware/middleware");
 const { profile, updateUser, getusers,deleteUser } = require("../controller/user");
@@ -35,5 +35,6 @@ router.route("/protected").get(protectedRoute);
 router.route("/profile/:id").get(profile);
 router.route("/protected/resource").get(authenticateToken);
 router.route("/user/:id").delete(deleteUser);
+router.route("/verify/session").post(varifySession);
 
 module.exports = router;
