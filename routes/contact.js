@@ -22,5 +22,3 @@ contactRoute
   contactRoute.route("/contacts/:id").delete(deleteContact);
 
 module.exports = contactRoute;
-
-CURD
