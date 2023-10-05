@@ -11,6 +11,7 @@ const sessionStore = new mongoSessionStore({
 });
 const authRouter = require("./routes/auth");
 const contactRoute = require("./routes/contact");
+const resumeRoute = require("./routes/resume");
 const corsOpts = {
   origin: "*",
 
@@ -33,9 +34,6 @@ app.use(
 
 app.use(cors());
 app.use(express.json());
-app.use("/api", authRouter);
-app.use("/api", contactRoute);
-// authRouter.use(session({secret:process.env.JWT_SECRET}))
 
 app.get("/", (req, res) => {
   res.send("APP is working!");
@@ -44,6 +42,15 @@ app.get("/", (req, res) => {
 app.get("/api", (req, res) => {
   res.send("API is working!");
 });
+
+
+//app route
+app.use("/api", authRouter);
+app.use("/api", contactRoute);
+app.use("/api", resumeRoute);
+
+
+
 
 //Port and Connect to DB
 const port = process.env.PORT || 5000;
