@@ -5,6 +5,7 @@ const {
   getStatusCode,
 } = require("http-status-codes");
 const User = require("../models/auth");
+const Sessions = require("../models/session");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const shortid = require("shortid");
@@ -148,31 +149,31 @@ const signIn = async (req, res) => {
       );
 
       if (isPasswordValid) {
+        const LoggedinUser = await User.findOne(
+          { email: req.body.email },
+          "-__v -hash_password -createdAt -updatedAt"
+        );
+
         const token = jwt.sign(
-          { user_id: user._id, role: user.role, email: user.email },
+          {
+            user_id: LoggedinUser.id,
+            role: LoggedinUser.role,
+            LoggedinUser: user.email,
+          },
           process.env.JWT_SECRET,
-          { expiresIn: "30d" }
+          {
+            expiresIn: "7d",
+          }
         );
         req.session.token = token;
         req.session.sessionId = req.session.id;
         res.cookie("sessionId", req.session.id);
 
-        const { _id, firstName, lastName, email, role, fullName, username } =
-          user;
-
         // req.session.token = token;
 
         res.status(StatusCodes.OK).json({
           token,
-          user: {
-            user_id: _id,
-            firstName,
-            lastName,
-            email,
-            role,
-            fullName,
-            username,
-          },
+          user: LoggedinUser,
           message: "Login Success!",
           statusCode: StatusCodes.OK,
           status: ReasonPhrases.OK,
@@ -410,6 +411,63 @@ const protectedRoute = async (req, res) => {
   }
 };
 
+const varifySession = async (req, res) => {
+  try {
+    const token = req?.headers?.authorization;
+    const sessionId = req?.headers?.session_id;
+    if (!token) {
+      res.status(StatusCodes.UNAUTHORIZED).json({
+        message: "Token Not Provided",
+        statusCode: StatusCodes.UNAUTHORIZED,
+        status: ReasonPhrases.UNAUTHORIZED,
+      });
+    }
+    if (!sessionId) {
+      res.status(StatusCodes.UNAUTHORIZED).json({
+        message: "Session Not Found",
+        statusCode: StatusCodes.UNAUTHORIZED,
+        status: ReasonPhrases.UNAUTHORIZED,
+      });
+    }
+
+    const decodeduser = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decodeduser) {
+      res.status(StatusCodes.FORBIDDEN).json({
+        message: "Authorization Token is Not Valid",
+        statusCode: StatusCodes.FORBIDDEN,
+        status: ReasonPhrases.FORBIDDEN,
+      });
+    }
+
+    const session = await Sessions.findOne({ _id: sessionId });
+    if (!session) {
+      res.status(StatusCodes.UNAUTHORIZED).json({
+        message: "invalid user",
+        statusCode: StatusCodes.UNAUTHORIZED,
+        status: ReasonPhrases.UNAUTHORIZED,
+      });
+    } else {
+      const user = await User.findOne(
+        { _id: decodeduser.user_id },
+        "-__v -hash_password -createdAt -updatedAt"
+      );
+      res.status(StatusCodes.OK).json({
+        message: "Authorized",
+        statusCode: StatusCodes.OK,
+        status: ReasonPhrases.OK,
+        user: user,
+      });
+    }
+    // Proceed with the protected route logic
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Internal Server Error",
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+    });
+  }
+};
+
 module.exports = {
   signUp,
   isAuthenticated,
@@ -419,4 +477,5 @@ module.exports = {
   singout,
   isAuthenticated,
   protectedRoute,
+  varifySession,
 };
