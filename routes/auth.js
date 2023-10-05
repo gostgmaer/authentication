@@ -13,25 +13,14 @@ const {
   protectedRoute,
 } = require("../controller/auth");
 const { authenticateToken } = require("../middleware/middleware");
-const { profile, updateUser, getusers } = require("../controller/user");
+const { profile, updateUser, getusers,deleteUser } = require("../controller/user");
 const {
   isRequestValidated,
   validateSignUpRequest,
   validateSignIpRequest,
 } = require("../validators/auth");
 
-// const store = new MongoDBStore({
-//   mongooseConnection: mongoose.connection,
-//   collection: 'sessions',
-// });
 
-// const sessionMiddleware = session({
-//   secret: process.env.JWT_SECRET,
-//   saveUninitialized: false,
-//   resave: false,
-//   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
-//   // You can specify a session store here if needed.
-// });
 
 router.route("/signin").post(validateSignIpRequest, isRequestValidated, signIn);
 router.route("/signout").post(singout);
@@ -45,5 +34,6 @@ router.route("/verify").get(varifyLogin);
 router.route("/protected").get(protectedRoute);
 router.route("/profile/:id").get(profile);
 router.route("/protected/resource").get(authenticateToken);
+router.route("/user/:id").delete(deleteUser);
 
 module.exports = router;
