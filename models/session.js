@@ -46,14 +46,5 @@ const sessionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-//For get fullName from when we get data from database
-sessionSchema.virtual("fullName").get(function () {
-  return `${this.firstName} ${this.lastName}`;
-});
-sessionSchema.method({
-  async authenticate(password) {
-    return bcrypt.compare(password, this.hash_password);
-  },
-});
-module.exports = mongoose.model("Sessions", sessionSchema);
 
+module.exports = mongoose.model("Sessions", sessionSchema);

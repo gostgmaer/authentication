@@ -15,7 +15,7 @@ const Mailgen = require("mailgen");
 
 const { promisify } = require("util");
 const redis = require("redis");
-
+const sessionStore = require("../db/session");
 const redisClient = redis.createClient();
 const asyncGet = promisify(redisClient.get).bind(redisClient);
 
@@ -171,9 +171,11 @@ const signIn = async (req, res) => {
 
         // req.session.token = token;
 
+        const sessionID = req.session.id;
         res.status(StatusCodes.OK).json({
           token,
           user: LoggedinUser,
+          session_id: sessionID,
           message: "Login Success!",
           statusCode: StatusCodes.OK,
           status: ReasonPhrases.OK,
@@ -439,25 +441,38 @@ const varifySession = async (req, res) => {
       });
     }
 
-    const session = await Sessions.findOne({ _id: sessionId });
-    if (!session) {
-      res.status(StatusCodes.UNAUTHORIZED).json({
-        message: "invalid user",
-        statusCode: StatusCodes.UNAUTHORIZED,
-        status: ReasonPhrases.UNAUTHORIZED,
-      });
-    } else {
-      const user = await User.findOne(
-        { _id: decodeduser.user_id },
-        "-__v -hash_password -createdAt -updatedAt"
-      );
-      res.status(StatusCodes.OK).json({
-        message: "Authorized",
-        statusCode: StatusCodes.OK,
-        status: ReasonPhrases.OK,
-        user: user,
-      });
-    }
+    sessionStore.get(sessionId, async (error, session) => {
+      if (error) {
+        res.status(StatusCodes.UNAUTHORIZED).json({
+          message: "Session Expired",
+          statusCode: StatusCodes.UNAUTHORIZED,
+          status: ReasonPhrases.UNAUTHORIZED,
+          cause: error,
+        });
+      } else if (!session) {
+        res.status(StatusCodes.UNAUTHORIZED).json({
+          message: "Session Expired",
+          statusCode: StatusCodes.UNAUTHORIZED,
+          status: ReasonPhrases.UNAUTHORIZED,
+        });
+      } else {
+        // Session data is available in the 'session' variable
+        sessionData = session;
+
+        const user = await User.findOne(
+          { _id: decodeduser.user_id },
+          "-__v -hash_password -createdAt -updatedAt"
+        );
+        res.status(StatusCodes.OK).json({
+          message: "Authorized",
+          statusCode: StatusCodes.OK,
+          status: ReasonPhrases.OK,
+          user: user,
+          token:session.token
+        });
+      }
+    });
+
     // Proceed with the protected route logic
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
