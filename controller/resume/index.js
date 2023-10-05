@@ -49,21 +49,21 @@ const getResume = async (req, res) => {
   try {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
-    const Resumes = await Resumes.find({}, "-__v")
+    const resData = await Resumes.find({}, "-__v")
       .skip((page - 1) * limit)
       .limit(limit)
       .sort({ updatedAt: -1 });
 
-    if (Resumes.length) {
-      Resumes.forEach((element) => {
-        // delete element._doc.__v;
-        element._doc.id = element.id;
-      });
+    if (resData.length) {
+      // res.forEach((element) => {
+      //   // delete element._doc.__v;
+      //   element._doc.id = element.id;
+      // });
       return res.status(StatusCodes.OK).json({
         message: `Resumes Loaded Successfully!`,
         statusCode: StatusCodes.OK,
         status: ReasonPhrases.OK,
-        result: Resumes,
+        result: resData,
       });
     } else {
       return res.status(StatusCodes.NOT_FOUND).json({
@@ -77,6 +77,7 @@ const getResume = async (req, res) => {
       message: `Internal server error`,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+      cause:error
     });
   }
 };
@@ -177,8 +178,8 @@ const deleteResume = async (req, res) => {
       });
     }
 
-    const user = await Resumes.findOne({ _id: id });
-    if (!user) {
+    const resData = await Resumes.findOne({ _id: id });
+    if (!resData) {
       res.status(StatusCodes.NOT_FOUND).json({
         message: "Record does not exist..!",
         statusCode: StatusCodes.NOT_FOUND,
