@@ -44,6 +44,9 @@ const userSchema = new mongoose.Schema(
     contactNumber: {
       type: String,
     },
+    update_by: {
+      type: String,
+    },
     profilePicture: {
       type: String,
     },
