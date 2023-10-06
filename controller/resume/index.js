@@ -8,7 +8,7 @@ const {
 const Resumes = require("../../models/resume");
 const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
-
+const jwt = require("jsonwebtoken");
 let config = {
   service: "gmail",
   auth: {
@@ -119,7 +119,14 @@ const getSingleResume = async (req, res) => {
 };
 const updateResumeInfo = async (req, res) => {
   const { id } = req.params;
+  const {authorization,session_id} = req?.headers
+  // const sessionId = req?.headers?.session_id;
+
   try {
+    var decodeduser = undefined;
+    if (token) {
+      decodeduser = jwt.verify(authorization, process.env.JWT_SECRET);
+    }
     if (!id) {
       res.status(StatusCodes.BAD_REQUEST).json({
         message: "Record id is not provide",
@@ -128,10 +135,11 @@ const updateResumeInfo = async (req, res) => {
       });
     }
 
-    const contact = await Resumes.findOne({ _id: id });
+    const resumeData = await Resumes.findOne({ _id: id });
 
-    if (contact) {
-      Resumes.updateOne({ _id: id }, { $set: req.body }, { upsert: true }).then(
+    if (resumeData) {
+      const body = { ...req.body, update_by: decodeduser?.email };
+      Resumes.updateOne({ _id: id }, { $set: body }, { upsert: true }).then(
         (data, err) => {
           if (err)
             res.status(StatusCodes.BAD_REQUEST).json({
