@@ -45,7 +45,6 @@ app.use("/api", authRouter);
 app.use("/api", contactRoute);
 app.use("/api", resumeRoute);
 app.use("/api", genericRoute);
-
 //Port and Connect to DB
 
 
