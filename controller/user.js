@@ -8,7 +8,7 @@ const {
 const User = require("../models/auth");
 const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
-
+const jwt = require("jsonwebtoken");
 let config = {
   service: "gmail",
   auth: {
@@ -29,11 +29,11 @@ const profile = async (req, res) => {
     });
   } else {
     try {
-      const userId = await User.findOne({ _id: id },'-hash_password -__v');
+      const userId = await User.findOne({ _id: id }, "-hash_password -__v");
 
       if (userId.id) {
         // const resdata = userId._doc;
-    
+
         return res.status(StatusCodes.OK).json({
           message: `Profile data has been Loaded Successfully!`,
           statusCode: StatusCodes.OK,
@@ -61,9 +61,10 @@ const getusers = async (req, res) => {
   try {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
-    const users = await User.find({},'-__v -hash_password')
+    const users = await User.find({}, "-__v -hash_password")
       .skip((page - 1) * limit)
-      .limit(limit).sort({ updatedAt: 1 });
+      .limit(limit)
+      .sort({ updatedAt: 1 });
 
     if (users) {
       return res.status(StatusCodes.OK).json({
@@ -157,6 +158,14 @@ const Profileupdate = (req, res) => {
 };
 
 const updateUser = async (req, res) => {
+  const token = req?.headers?.authorization;
+  const sessionId = req?.headers?.session_id;
+  var decodeduser = undefined;
+  if (token) {
+    decodeduser = jwt.verify(token, process.env.JWT_SECRET);
+  }
+
+
   const { id } = req.params;
   try {
     if (!id) {
@@ -180,7 +189,9 @@ const updateUser = async (req, res) => {
         },
       });
       try {
-        User.updateOne(myquery, { $set: req.body }, { upsert: true }).then(
+        const body = { ...req.body, update_by: decodeduser?.email };
+
+        User.updateOne(myquery, { $set: body }, { upsert: true }).then(
           (data, err) => {
             if (err)
               res.status(StatusCodes.NOT_MODIFIED).json({
@@ -292,4 +303,4 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { profile, updateUser, Profileupdate, getusers,deleteUser };
+module.exports = { profile, updateUser, Profileupdate, getusers, deleteUser };

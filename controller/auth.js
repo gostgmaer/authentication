@@ -158,7 +158,7 @@ const signIn = async (req, res) => {
           {
             user_id: LoggedinUser.id,
             role: LoggedinUser.role,
-            LoggedinUser: user.email,
+            email: LoggedinUser.email,
           },
           process.env.JWT_SECRET,
           {
