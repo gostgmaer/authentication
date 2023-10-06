@@ -11,34 +11,23 @@ const {getAppIdAndEntity} =require('../../utils/service')
 const collectionName = process.env.COLLECTION;
 const collection = mongoose.connection.collection(collectionName);
 
-async function createObject(object) {
-  const result = await collection.insertOne(object);
-  return result;
-}
 
-async function readAllObjects() {
-  return collection.find({}).toArray();
-}
 
-async function readObjectById(id) {
-  return collection.findOne({ _id: mongoose.Types.ObjectId(id) });
-}
+// async function updateObject(id, updatedObject) {
+//   const result = await collection.findOneAndUpdate(
+//     { _id: mongoose.Types.ObjectId(id) },
+//     { $set: updatedObject },
+//     { returnOriginal: false }
+//   );
+//   return result.value;
+// }
 
-async function updateObject(id, updatedObject) {
-  const result = await collection.findOneAndUpdate(
-    { _id: mongoose.Types.ObjectId(id) },
-    { $set: updatedObject },
-    { returnOriginal: false }
-  );
-  return result.value;
-}
-
-async function deleteObject(id) {
-  const result = await collection.findOneAndDelete({
-    _id: mongoose.Types.ObjectId(id),
-  });
-  return result;
-}
+// async function deleteObject(id) {
+//   const result = await collection.findOneAndDelete({
+//     _id: mongoose.Types.ObjectId(id),
+//   });
+//   return result;
+// }
 
 const create = async (req, res) => {
   
@@ -112,6 +101,85 @@ const getAllRecord = async (req, res) => {
   }
 };
 
+
+const getSingleRecord = async (req, res) => {
+  try {
+    const container = getAppIdAndEntity(req.url)
+    const objectId = req.params.id;
+   
+    if(!objectId){
+      res.status(StatusCodes.NOT_FOUND).json({
+        message: `No record id Provide`,
+        statusCode: StatusCodes.NOT_FOUND,
+        status: ReasonPhrases.NOT_FOUND,
+      });
+    }
+    const ID = new mongoose.Types.ObjectId(objectId);
+    const object = await collection.findOne({...container, _id: ID })
+    if (!object) {
+      res.status(StatusCodes.NOT_FOUND).json({
+        result: object,
+        message: `No record Found for Given id!`,
+        statusCode: StatusCodes.NOT_FOUND,
+        status: ReasonPhrases.NOT_FOUND,
+      });
+    }else{
+      res.status(StatusCodes.OK).json({
+        result: object,
+        message: `Loaded Successfully!`,
+        statusCode: StatusCodes.OK,
+        status: ReasonPhrases.OK,
+      });
+    }
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+      cause:error
+    });
+  }
+};
+
+const removeRecord = async (req,res) => {
+  try {
+    const container = getAppIdAndEntity(req.url)
+    const objectId = req.params.id;
+   
+    if(!objectId){
+      res.status(StatusCodes.NOT_FOUND).json({
+        message: `No record id Provide`,
+        statusCode: StatusCodes.NOT_FOUND,
+        status: ReasonPhrases.NOT_FOUND,
+      });
+    }
+    const ID = new mongoose.Types.ObjectId(objectId);
+    const object = await collection.findOneAndDelete({...container, _id: ID })
+    if (object.lastErrorObject.n==0) {
+      res.status(StatusCodes.NOT_FOUND).json({
+        message: `No record Found for Given id!`,
+        statusCode: StatusCodes.NOT_FOUND,
+        status: ReasonPhrases.NOT_FOUND,
+      });
+    }else{
+      res.status(StatusCodes.OK).json({
+        result: object,
+        message: `deleted successfully!`,
+        statusCode: StatusCodes.OK,
+        status: ReasonPhrases.OK,
+      });
+    }
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+      cause:error
+    });
+  }
+}
+
+
 // // Read all objects
 // app.get("/api/read", async (req, res) => {
 //   try {
@@ -125,17 +193,17 @@ const getAllRecord = async (req, res) => {
 
 // // Read one object by ID
 // app.get("/api/read/:id", async (req, res) => {
-//   try {
-//     const objectId = req.params.id;
-//     const object = await readObjectById(objectId);
-//     if (!object) {
-//       return res.status(404).json({ error: "Object not found" });
-//     }
-//     res.json(object);
-//   } catch (error) {
-//     console.error("Error reading object:", error);
-//     res.status(500).json({ error: "Error reading object" });
-//   }
+  // try {
+  //   const objectId = req.params.id;
+  //   const object = await readObjectById(objectId);
+  //   if (!object) {
+  //     return res.status(404).json({ error: "Object not found" });
+  //   }
+  //   res.json(object);
+  // } catch (error) {
+  //   console.error("Error reading object:", error);
+  //   res.status(500).json({ error: "Error reading object" });
+  // }
 // });
 
 // // Update an object by ID
@@ -172,4 +240,5 @@ const getAllRecord = async (req, res) => {
 module.exports = {
   create,
   getAllRecord,
+  getSingleRecord,removeRecord
 };
