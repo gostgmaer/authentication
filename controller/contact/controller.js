@@ -30,7 +30,7 @@ const createContact = async (req, res) => {
     message,
     socialMedia,
   } = req.body;
-  if (!firstName || !lastName || !email) {
+  if (!firstName || !lastName || !email || !message) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       message: "Please Provide Required Information",
       statusCode: StatusCodes.BAD_REQUEST,
@@ -38,16 +38,6 @@ const createContact = async (req, res) => {
     });
   }
 
-  const userData = {
-    firstName,
-    lastName,
-    email,
-    contactNumber,
-    user_id,
-    address,
-    message,
-    socialMedia,
-  };
 
   let MailGenerator = new Mailgen({
     theme: "default",
@@ -58,7 +48,7 @@ const createContact = async (req, res) => {
   });
 
   try {
-    Contacts.create(userData).then((data, err) => {
+    Contacts.create(req.body).then((data, err) => {
       if (err) res.status(StatusCodes.BAD_REQUEST).json({ err });
       else {
         let mailBody = {

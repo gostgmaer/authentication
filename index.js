@@ -9,6 +9,8 @@ const sessionStore = require('./db/session')
 const authRouter = require("./routes/auth");
 const contactRoute = require("./routes/contact");
 const resumeRoute = require("./routes/resume");
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 const corsOpts = {
   origin: "*",
 
@@ -40,6 +42,10 @@ app.get("/", (req, res) => {
 app.get("/api", (req, res) => {
   res.send("API is working!");
 });
+
+
+
+app.use('/api/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 //app route
 app.use("/api", authRouter);
