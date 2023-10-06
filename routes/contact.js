@@ -14,11 +14,11 @@ const {
 
 
 contactRoute
-  .route("/contact")
+  .route("/contact/create")
   .post(validateCreateContact, isRequestValidated, createContact);
-  contactRoute.route("/contacts/:id").get(getSingleContact);
-  contactRoute.route("/contacts").get(getContact);
-  contactRoute.route("/contacts/:id").patch(updateContactInfo);
-  contactRoute.route("/contacts/:id").delete(deleteContact);
+  contactRoute.route("/contact/:id").get(getSingleContact);
+  contactRoute.route("/contact").get(getContact);
+  contactRoute.route("/contact/:id").patch(updateContactInfo);
+  contactRoute.route("/contact/:id").delete(deleteContact);
 
 module.exports = contactRoute;

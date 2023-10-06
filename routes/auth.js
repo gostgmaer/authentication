@@ -133,7 +133,7 @@ router.route("/user/verify/session").post(varifySession);
 router.route("/user/reset-password").post(resetPassword);
 
 
-router.route("/signout").post(singout);
+router.route("/user/signout").post(singout);
 
 //user registration
 /** POST Methods */
@@ -264,15 +264,15 @@ router.route("/user").get(getusers);
  *        description: Server Error
  */
 
-router.route("/users/:id").put(updateUser);
+router.route("/user/:id").put(updateUser);
 
 
 
-router.route("/session").post(isAuthenticated);
-router.route("/verify").get(varifyLogin);
-router.route("/protected").get(protectedRoute);
-router.route("/profile/:id").get(profile);
-router.route("/protected/resource").get(authenticateToken);
+router.route("/user/session").post(isAuthenticated);
+router.route("/user/verify").get(varifyLogin);
+router.route("/user/protected").get(protectedRoute);
+router.route("/user/profile/:id").get(profile);
+router.route("/user/protected/resource").get(authenticateToken);
 
 /** DELETE Methods */
     /**
