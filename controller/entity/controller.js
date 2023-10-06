@@ -19,20 +19,20 @@ let config = {
 
 const createResume = async (req, res) => {
   try {
-    Resumes.create(req.body,).then((data, err) => {
+    Resumes.create(req.body).then((data, err) => {
       if (err)
         return res.status(StatusCodes.BAD_REQUEST).json({
           message: `Something Wants Wrong`,
           statusCode: StatusCodes.BAD_REQUEST,
           status: ReasonPhrases.BAD_REQUEST,
-          cause:error
+          cause: error,
         });
       else {
         res.status(StatusCodes.CREATED).json({
           message: "One Resume is Created Successfully!",
           status: ReasonPhrases.CREATED,
           statusCode: StatusCodes.CREATED,
-          result: {...req.body,id:data.id},
+          result: { ...req.body, id: data.id },
         });
       }
     });
@@ -77,7 +77,7 @@ const getResume = async (req, res) => {
       message: `Internal server error`,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
-      cause:error
+      cause: error,
     });
   }
 };
@@ -119,7 +119,7 @@ const getSingleResume = async (req, res) => {
 };
 const updateResumeInfo = async (req, res) => {
   const { id } = req.params;
-  const {authorization,session_id} = req?.headers
+  const { authorization, session_id } = req?.headers;
   // const sessionId = req?.headers?.session_id;
 
   try {
