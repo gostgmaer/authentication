@@ -333,18 +333,44 @@ const varifyLogin = async (req, res) => {
 };
 
 const singout = async (req, res) => {
-  req.session.destroy();
-  if (!req.session) {
-    res.status(StatusCodes.OK).json({
-      message: "Success",
-      statusCode: StatusCodes.OK,
-      status: ReasonPhrases.OK,
+  try {
+    const sessionId = req?.headers?.session_id;
+    req.session.destroy((err) => {
+      if (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          message: "INTERNAL_SERVER_ERROR",
+          statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+          status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+          cause: err,
+        });
+      } else {
+        // Successfully destroyed the session, now remove it from the database
+        
+        sessionStore.destroy(sessionId, (destroyErr) => {
+          if (destroyErr) {
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+              message: "INTERNAL_SERVER_ERROR",
+              statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+              status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+              cause: destroyErr,
+            });
+          } else {
+            // Redirect to a logout success page or another route
+            res.status(StatusCodes.OK).json({
+              message: "Logout Success",
+              statusCode: StatusCodes.OK,
+              status: ReasonPhrases.OK,
+            });
+          }
+        });
+      }
     });
-  } else {
+  } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: "INTERNAL_SERVER_ERROR",
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+      cause: error,
     });
   }
 };
@@ -468,7 +494,7 @@ const varifySession = async (req, res) => {
           statusCode: StatusCodes.OK,
           status: ReasonPhrases.OK,
           user: user,
-          token:session.token
+          token: session.token,
         });
       }
     });
