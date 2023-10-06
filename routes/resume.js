@@ -13,12 +13,13 @@ const {
 } = require("../validators/contact");
 
 
+
 resumeRoute
-  .route("/resume")
+  .route("/resume/create")
   .post(validateCreateContact, isRequestValidated, createResume);
-  resumeRoute.route("/resumes/:id").get(getSingleResume);
-  resumeRoute.route("/resumes").get(getResume);
-  resumeRoute.route("/resumes/:id").patch(updateResumeInfo);
-  resumeRoute.route("/resumes/:id").delete(deleteResume);
+  resumeRoute.route("/resume/:id").get(getSingleResume);
+  resumeRoute.route("/resume").get(getResume);
+  resumeRoute.route("/resume/:id").patch(updateResumeInfo);
+  resumeRoute.route("/resume/:id").delete(deleteResume);
 
 module.exports = resumeRoute;
