@@ -1,6 +1,8 @@
 const express = require("express");
 require("dotenv").config();
 const connectDB = require("./db/connect");
+const mongoose = require("mongoose");
+const MongoClient = require("mongodb").MongoClient;
 const app = express();
 var cors = require("cors");
 const session = require("express-session");
@@ -9,15 +11,9 @@ const sessionStore = require('./db/session')
 const authRouter = require("./routes/auth");
 const contactRoute = require("./routes/contact");
 const resumeRoute = require("./routes/resume");
+const genericRoute = require("./routes/generic");
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
-const corsOpts = {
-  origin: "*",
-
-  methods: ["GET", "POST", "PUT"],
-
-  allowedHeaders: ["Content-Type"],
-};
 
 app.use(
   session({
@@ -44,15 +40,17 @@ app.get("/api", (req, res) => {
 });
 
 
-
 app.use('/api/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 //app route
-app.use("/api", authRouter);
-app.use("/api", contactRoute);
-app.use("/api", resumeRoute);
+// app.use("/api", authRouter);
+// app.use("/api", contactRoute);
+// app.use("/api", resumeRoute);
+app.use("/api", genericRoute);
 
 //Port and Connect to DB
+
+
 const port = process.env.PORT || 5000;
 const start = async () => {
   try {
