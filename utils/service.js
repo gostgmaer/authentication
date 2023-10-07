@@ -32,9 +32,15 @@ function getAppIdAndEntity(url) {
     }
   }
 
+  function createProjectionFromArray(fields) {
+    const projection = {};
+    fields.forEach(field => {
+      projection[field] = 1;
+    });
+    return projection;
+  }
 
-
-  module.exports = {getAppIdAndEntity};
+  module.exports = {getAppIdAndEntity,createProjectionFromArray};
 
 
 
