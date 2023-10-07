@@ -19,20 +19,30 @@ let config = {
 
 const createResume = async (req, res) => {
   try {
-    Resumes.create(req.body,).then((data, err) => {
+    const token = req?.headers?.authorization;
+    var decodeduser = undefined;
+    if (token) {
+      decodeduser = jwt.verify(token, process.env.JWT_SECRET);
+    }
+    const UserInfo = {
+      created_by: decodeduser?.email,
+      user_id: decodeduser.user_id,
+    };
+
+    Resumes.create({ ...req.body, ...UserInfo }).then((data, err) => {
       if (err)
         return res.status(StatusCodes.BAD_REQUEST).json({
           message: `Something Wants Wrong`,
           statusCode: StatusCodes.BAD_REQUEST,
           status: ReasonPhrases.BAD_REQUEST,
-          cause:error
+          cause: error,
         });
       else {
         res.status(StatusCodes.CREATED).json({
           message: "One Resume is Created Successfully!",
           status: ReasonPhrases.CREATED,
           statusCode: StatusCodes.CREATED,
-          result: {...req.body,id:data.id},
+          result: { ...req.body, id: data.id },
         });
       }
     });
@@ -47,18 +57,50 @@ const createResume = async (req, res) => {
 
 const getResume = async (req, res) => {
   try {
+    const token = req?.headers?.authorization;
+    const { sort, filter } = req.query;
+    var decodeduser = undefined;
+    if (token) {
+      decodeduser = jwt.verify(token, process.env.JWT_SECRET);
+    }
+
+    var UserInfo = {
+      // created_by: decodeduser?.email,
+      // user_id: decodeduser.user_id,
+    };
+    if (decodeduser?.role == "admin") {
+       UserInfo = {};
+    }
+
+    var query = {};
+
+    if (filter) {
+      const filterObj = JSON.parse(filter);
+      for (const key in filterObj) {
+        query[key] = filterObj[key];
+      }
+    }
+    var sortOptions = {};
+
+    if (sort) {
+      const [sortKey, sortOrder] = sort.split(":");
+      sortOptions[sortKey] = sortOrder === "desc" ? -1 : 1;
+    }
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
-    const resData = await Resumes.find({}, "-__v")
+    const resData = await Resumes.find({ ...UserInfo, ...query }, "-__v")
       .skip((page - 1) * limit)
       .limit(limit)
-      .sort({ updatedAt: -1 });
+      .sort(sortOptions);
 
     if (resData.length) {
       // res.forEach((element) => {
       //   // delete element._doc.__v;
       //   element._doc.id = element.id;
       // });
+      resData.forEach(element => {
+        element["id"]=element._id
+      });
       return res.status(StatusCodes.OK).json({
         message: `Resumes Loaded Successfully!`,
         statusCode: StatusCodes.OK,
@@ -77,7 +119,7 @@ const getResume = async (req, res) => {
       message: `Internal server error`,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
-      cause:error
+      cause: error,
     });
   }
 };
@@ -119,7 +161,7 @@ const getSingleResume = async (req, res) => {
 };
 const updateResumeInfo = async (req, res) => {
   const { id } = req.params;
-  const {authorization,session_id} = req?.headers
+  const { authorization, session_id } = req?.headers;
   // const sessionId = req?.headers?.session_id;
 
   try {

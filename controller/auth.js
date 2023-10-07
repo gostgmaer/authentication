@@ -94,7 +94,7 @@ const signUp = async (req, res) => {
               button: {
                 color: "#22BC66", // Optional action button color
                 text: "Login your account",
-                link: "https://userinfo-pi.vercel.app/login",
+                link: `${process.env.LOGINHOST}/${process.env.CLIENTLOGINPAGE}`,
               },
             },
             outro:

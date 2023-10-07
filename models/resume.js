@@ -21,6 +21,18 @@ const resumeSchema = new mongoose.Schema(
       min: 2,
       max: 100,
     },
+    name: {
+      type: String,
+      require: true,
+      trim: true,
+      min: 2,
+      max: 1000,
+    },
+    position: {
+      type: String,
+      require: true,
+      trim: true,
+    },
     lastName: {
       type: String,
       require: true,
@@ -42,6 +54,10 @@ const resumeSchema = new mongoose.Schema(
       trim: true,
     },
     phone: {
+      type: String,
+      trim: true,
+    },
+    last_step: {
       type: String,
       trim: true,
     },
@@ -334,8 +350,8 @@ const resumeSchema = new mongoose.Schema(
   }
 );
 //For get fullName from when we get data from database
-resumeSchema.virtual("name").get(function () {
-  return `${this.firstName} ${this.lastName}`;
-});
+// resumeSchema.virtual("name").get(function () {
+//   return `${this.firstName} ${this.lastName}`;
+// });
 
 module.exports = mongoose.model("Resumes", resumeSchema);
