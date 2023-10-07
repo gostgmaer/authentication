@@ -14,6 +14,9 @@ const resumeSchema = new mongoose.Schema(
     update_by: {
       type: String,
     },
+    created_by: {
+      type: String,
+    },
     firstName: {
       type: String,
       require: true,
@@ -338,7 +341,11 @@ const resumeSchema = new mongoose.Schema(
           type: String,
           trim: true,
         },
-        repositoryUrl: {
+        repository: {
+          type: String,
+          trim: true,
+        },
+        overview: {
           type: String,
           trim: true,
         },

@@ -42,7 +42,7 @@ const createResume = async (req, res) => {
           message: "One Resume is Created Successfully!",
           status: ReasonPhrases.CREATED,
           statusCode: StatusCodes.CREATED,
-          result: { ...req.body, id: data.id },
+          result: { record_id: data.id },
         });
       }
     });
@@ -65,8 +65,8 @@ const getResume = async (req, res) => {
     }
 
     var UserInfo = {
-      // created_by: decodeduser?.email,
-      // user_id: decodeduser.user_id,
+      created_by: decodeduser?.email,
+      user_id: decodeduser.user_id,
     };
     if (decodeduser?.role == "admin") {
        UserInfo = {};
@@ -165,8 +165,9 @@ const updateResumeInfo = async (req, res) => {
   // const sessionId = req?.headers?.session_id;
 
   try {
+    // const token = req?.headers?.authorization;
     var decodeduser = undefined;
-    if (token) {
+    if (authorization) {
       decodeduser = jwt.verify(authorization, process.env.JWT_SECRET);
     }
     if (!id) {
@@ -188,7 +189,7 @@ const updateResumeInfo = async (req, res) => {
               message: "Update Failed",
               status: ReasonPhrases.BAD_REQUEST,
               statusCode: StatusCodes.BAD_REQUEST,
-              cause: err,
+              cause: err.message,
             });
           else {
             res.status(StatusCodes.OK).json({
@@ -212,7 +213,7 @@ const updateResumeInfo = async (req, res) => {
       message: "Please Provide a Valid user id or Server not responding!",
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
-      cause: error,
+      cause: error.message,
     });
   }
 };
