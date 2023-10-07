@@ -2,8 +2,7 @@ const { check, validationResult } = require("express-validator");
 const { StatusCodes, ReasonPhrases } = require("http-status-codes");
 
 const validateCreateContact = [
-  check("firstName").notEmpty().withMessage("First Name is required"),
-  check("lastName").notEmpty().withMessage("Last Name is required"),
+  check("name").notEmpty().withMessage("First Name is required"),
   check("email").isEmail().withMessage("Valid Email required"),
 ];
 
