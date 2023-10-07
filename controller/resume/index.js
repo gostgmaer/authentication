@@ -48,7 +48,7 @@ const createResume = async (req, res) => {
     });
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Internal Server Error",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
@@ -119,7 +119,7 @@ const getResume = async (req, res) => {
     }
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: `Internal server error`,
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
       cause: error,
@@ -155,7 +155,7 @@ const getSingleResume = async (req, res) => {
       }
     } catch (error) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: `Internal server error`,
+        message: error.message,
         statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
         status: ReasonPhrases.INTERNAL_SERVER_ERROR,
       });
@@ -189,10 +189,10 @@ const updateResumeInfo = async (req, res) => {
         (data, err) => {
           if (err)
             res.status(StatusCodes.BAD_REQUEST).json({
-              message: "Update Failed",
+              message: err.message,
               status: ReasonPhrases.BAD_REQUEST,
               statusCode: StatusCodes.BAD_REQUEST,
-              cause: err.message,
+           
             });
           else {
             res.status(StatusCodes.OK).json({
@@ -213,7 +213,7 @@ const updateResumeInfo = async (req, res) => {
     }
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Please Provide a Valid user id or Server not responding!",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
       cause: error.message,
@@ -243,7 +243,7 @@ const deleteResume = async (req, res) => {
       Resumes.deleteOne({ _id: id }).then((data, err) => {
         if (err)
           res.status(StatusCodes.BAD_REQUEST).json({
-            message: "Delete Failed",
+            message: err.message,
             status: ReasonPhrases.BAD_REQUEST,
             statusCode: StatusCodes.BAD_REQUEST,
             cause: err,
@@ -260,7 +260,7 @@ const deleteResume = async (req, res) => {
     }
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Internal Server Error",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
       cause: error,

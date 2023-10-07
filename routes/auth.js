@@ -11,7 +11,7 @@ const {
   singout,
   isAuthenticated,
   protectedRoute,
-  varifySession,
+  varifySession,forgetPassword
 } = require("../controller/auth");
 const { authenticateToken } = require("../middleware/middleware");
 const {
@@ -21,9 +21,11 @@ const {
   deleteUser,
 } = require("../controller/user");
 const {
-  isRequestValidated,
   validateSignUpRequest,
+  isRequestValidated,
   validateSignIpRequest,
+  validateForgetPassword,
+  validateResetpassword,
 } = require("../validators/auth");
 
 /**
@@ -130,8 +132,8 @@ router.route("/user/verify/session").post(varifySession);
  *        description: Server Error
  */
 
-router.route("/user/reset-password").post(resetPassword);
-
+router.route("/user/reset-password/:token").post(validateResetpassword, isRequestValidated,resetPassword);
+router.route("/user/forget-password").post(validateForgetPassword, isRequestValidated,forgetPassword);
 
 router.route("/user/signout").post(singout);
 
@@ -266,7 +268,7 @@ router.route("/user").get(getusers);
 
 router.route("/user/:id").put(updateUser);
 
-
+router.route("/user/:id").patch(updateUser);
 
 router.route("/user/session").post(isAuthenticated);
 router.route("/user/verify").get(varifyLogin);

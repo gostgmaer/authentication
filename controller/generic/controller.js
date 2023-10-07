@@ -36,9 +36,10 @@ const create = async (req, res) => {
     });
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Internal Server Error",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+      cause: error,
     });
   }
 };
@@ -97,8 +98,12 @@ const getAllRecord = async (req, res) => {
       status: ReasonPhrases.OK,
     });
   } catch (error) {
-    console.error("Error reading objects:", error);
-    res.status(500).json({ error: "Error reading objects" });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+      cause: error,
+    });
   }
 };
 
