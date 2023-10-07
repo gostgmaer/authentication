@@ -11,22 +11,6 @@ const { getAppIdAndEntity,createProjectionFromArray } = require("../../utils/ser
 const collectionName = process.env.COLLECTION;
 const collection = mongoose.connection.collection(collectionName);
 
-// async function updateObject(id, updatedObject) {
-//   const result = await collection.findOneAndUpdate(
-//     { _id: mongoose.Types.ObjectId(id) },
-//     { $set: updatedObject },
-//     { returnOriginal: false }
-//   );
-//   return result.value;
-// }
-
-// async function deleteObject(id) {
-//   const result = await collection.findOneAndDelete({
-//     _id: mongoose.Types.ObjectId(id),
-//   });
-//   return result;
-// }
-
 const create = async (req, res) => {
   try {
     const container = getAppIdAndEntity(req.url);
