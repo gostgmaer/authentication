@@ -36,6 +36,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       require: true,
     },
+    resetToken: String,
+    resetTokenExpiration: Date,
     role: {
       type: String,
       enum: ["user", "admin"],
@@ -75,4 +77,3 @@ userSchema.method({
   },
 });
 module.exports = mongoose.model("User", userSchema);
-

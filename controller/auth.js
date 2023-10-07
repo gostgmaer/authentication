@@ -12,7 +12,7 @@ const shortid = require("shortid");
 // const { transporter } = require("../mail/mailer");
 const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
-
+const crypto = require("crypto");
 const { promisify } = require("util");
 const redis = require("redis");
 const sessionStore = require("../db/session");
@@ -82,7 +82,11 @@ const signUp = async (req, res) => {
     });
   } else {
     User.create(userData).then((data, err) => {
-      if (err) res.status(StatusCodes.BAD_REQUEST).json({ err });
+      if (err) return res.status(StatusCodes.BAD_REQUEST).json({
+        message: err.message,
+        statusCode: StatusCodes.BAD_REQUEST,
+        status: ReasonPhrases.BAD_REQUEST,
+      });
       else {
         let mailBody = {
           body: {
@@ -120,7 +124,7 @@ const signUp = async (req, res) => {
           })
           .catch((error) => {
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-              message: "Internal Server Error",
+              message: error.message,
               statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
               status: ReasonPhrases.INTERNAL_SERVER_ERROR,
             });
@@ -196,7 +200,7 @@ const signIn = async (req, res) => {
     }
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Internal Server error!",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
@@ -204,12 +208,22 @@ const signIn = async (req, res) => {
 };
 
 const resetPassword = async (req, res) => {
-  const { email, newPassword } = req.body;
-
   try {
+    const { token } = req.params;
+    const { password } = req.body;
+
     const user = await User.findOne({
-      email,
+      resetToken: token,
+      resetTokenExpiration: { $gt: Date.now() },
     });
+
+    if (!user) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        message: "Invalid or expired token",
+        statusCode: StatusCodes.BAD_REQUEST,
+        status: ReasonPhrases.BAD_REQUEST,
+      });
+    }
 
     let MailGenerator = new Mailgen({
       theme: "default",
@@ -222,36 +236,32 @@ const resetPassword = async (req, res) => {
     let response = {
       body: {
         name: user.firstName,
-        intro: "Password has been reset",
-
-        outro: "Please login to your account",
+        intro: "Your password has been successfully reset.",
+        action: {
+          instructions: `You can now log in to your account with your new password.`,
+          button: {
+            color: "#22BC66", // Optional action button color
+            text: "Login Now",
+            link: `${process.env.LOGINHOST}/${process.env.CLIENTLOGINPAGE}`,
+          },
+        },
+        outro:
+          "If you did not request this, please ignore this email and your password will remain unchanged.",
       },
     };
     let mail = MailGenerator.generate(response);
     const mailOptions = {
       from: "kishor81160@gmail.com", // Your email address
-      to: "gostgaming08@gmail.com", // The user's email address
-      subject: "Password has been reset", // Email subject
+      to: user.email, // The user's email address
+      subject: "Password Reset Successful", // Email subject
       html: mail, // Email text
     };
-
-    if (!user) {
-      // Token is invalid or expired
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    // Hash the new password before updating
-    const hashedPassword = await bcrypt.hash(newPassword, 10); // 10 is the saltRounds
-
-    // Update the user's password and clear reset token fields
+    const hashedPassword = await bcrypt.hash(password, 10); // 10 is the saltRounds
     user.hash_password = hashedPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    user.resetToken = undefined;
+    user.resetTokenExpiration = undefined;
 
-    // Save the user document with the new password
     await user.save();
-
-    // Send the email
     transporter
       .sendMail(mailOptions)
       .then(() => {
@@ -263,7 +273,7 @@ const resetPassword = async (req, res) => {
       })
       .catch((error) => {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-          message: "Internal Server Error",
+          message: error.message,
           statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
           status: ReasonPhrases.INTERNAL_SERVER_ERROR,
         });
@@ -275,7 +285,7 @@ const resetPassword = async (req, res) => {
     // Handle error
 
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Somwthing wants wrong",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
@@ -300,7 +310,7 @@ function isAuthenticated(req, res) {
     }
   } catch (error) {
     res.status(StatusCodes.UNAUTHORIZED).json({
-      message: "Unauthorized",
+      message: error.message,
       statusCode: StatusCodes.UNAUTHORIZED,
       status: ReasonPhrases.UNAUTHORIZED,
     });
@@ -325,7 +335,7 @@ const varifyLogin = async (req, res) => {
     }
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "INTERNAL_SERVER_ERROR",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
@@ -338,18 +348,18 @@ const singout = async (req, res) => {
     req.session.destroy((err) => {
       if (err) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-          message: "INTERNAL_SERVER_ERROR",
+          message: err.message,
           statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
           status: ReasonPhrases.INTERNAL_SERVER_ERROR,
           cause: err,
         });
       } else {
         // Successfully destroyed the session, now remove it from the database
-        
+
         sessionStore.destroy(sessionId, (destroyErr) => {
           if (destroyErr) {
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-              message: "INTERNAL_SERVER_ERROR",
+              message: error.message,
               statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
               status: ReasonPhrases.INTERNAL_SERVER_ERROR,
               cause: destroyErr,
@@ -367,7 +377,7 @@ const singout = async (req, res) => {
     });
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "INTERNAL_SERVER_ERROR",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
       cause: error,
@@ -432,7 +442,7 @@ const protectedRoute = async (req, res) => {
     // Proceed with the protected route logic
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Internal Server Error",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
@@ -469,10 +479,10 @@ const varifySession = async (req, res) => {
 
     sessionStore.get(sessionId, async (error, session) => {
       if (error) {
-        res.status(StatusCodes.UNAUTHORIZED).json({
-          message: "Session Expired",
-          statusCode: StatusCodes.UNAUTHORIZED,
-          status: ReasonPhrases.UNAUTHORIZED,
+        res.status(StatusCodes.BAD_REQUEST).json({
+          message: error.message,
+          statusCode: StatusCodes.BAD_REQUEST,
+          status: ReasonPhrases.BAD_REQUEST,
           cause: error,
         });
       } else if (!session) {
@@ -502,9 +512,114 @@ const varifySession = async (req, res) => {
     // Proceed with the protected route logic
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Internal Server Error",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+    });
+  }
+};
+
+const forgetPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({
+      email,
+    });
+    if (!user) {
+      res.status(StatusCodes.NOT_FOUND).json({
+        message: "Email address is not registered",
+        statusCode: StatusCodes.NOT_FOUND,
+        status: ReasonPhrases.NOT_FOUND,
+      });
+    } else {
+      const resetToken = jwt.sign(
+        {
+          user_id: user.id,
+          role: user.role,
+          email: user.email,
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "1h",
+        }
+      );
+      const resetTokenExpiration = Date.now() + 3600000; // 1 hour
+
+      const data = await User.updateOne(
+        { email: req.body.email },
+        {
+          resetToken,
+          resetTokenExpiration,
+        }
+      );
+      if (!data) {
+        res.status(StatusCodes.BAD_REQUEST).json({
+          message: "Reset password email generation failed",
+          statusCode: StatusCodes.BAD_REQUEST,
+          status: ReasonPhrases.BAD_REQUEST,
+        });
+      } else {
+        let MailGenerator = new Mailgen({
+          theme: "default",
+          product: {
+            name: "kishor",
+            link: "https://google.com",
+          },
+        });
+
+        let response = {
+          body: {
+            name: user.firstName,
+            intro:
+              "You are receiving this because you (or someone else) have requested a password reset for your account.",
+            action: {
+              instructions: `Click on the following link to reset your password:`,
+              button: {
+                color: "#22BC66", // Optional action button color
+                text: "Reset Password",
+                link: `${process.env.LOGINHOST}/${process.env.CLIENTRESETPASSURL}?token=${resetToken}`,
+              },
+            },
+            outro:
+              "If you did not request this, please ignore this email and your password will remain unchanged.",
+          },
+        };
+        let mail = MailGenerator.generate(response);
+        const mailOptions = {
+          from: "kishor81160@gmail.com", // Your email address
+          to: user.email, // The user's email address
+          subject: "Password Reset", // Email subject
+          html: mail, // Email text
+        };
+
+        transporter
+          .sendMail(mailOptions)
+          .then(() => {
+            res.status(StatusCodes.OK).json({
+              message: "Password reset email has been sent successfully. Please check your mailbox",
+              statusCode: StatusCodes.OK,
+              status: ReasonPhrases.OK,
+            });
+          })
+          .catch((error) => {
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+              message: error.message,
+              statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+              status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+           
+            });
+          });
+      }
+    }
+  } catch (error) {
+    // Handle error
+
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+     
     });
   }
 };
@@ -519,4 +634,5 @@ module.exports = {
   isAuthenticated,
   protectedRoute,
   varifySession,
+  forgetPassword,
 };

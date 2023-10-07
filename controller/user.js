@@ -49,7 +49,7 @@ const profile = async (req, res) => {
       }
     } catch (error) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: `Internal server error`,
+        message: error.message,
         statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
         status: ReasonPhrases.INTERNAL_SERVER_ERROR,
       });
@@ -81,10 +81,10 @@ const getusers = async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(StatusCodes.NOT_FOUND).json({
-      message: `No information found`,
-      statusCode: StatusCodes.NOT_FOUND,
-      status: ReasonPhrases.NOT_FOUND,
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
   }
 };
@@ -234,7 +234,7 @@ const updateUser = async (req, res) => {
         );
       } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-          message: "Internal Server Error",
+          message: error.message,
           statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
           status: ReasonPhrases.INTERNAL_SERVER_ERROR,
           cause: error,
@@ -249,7 +249,7 @@ const updateUser = async (req, res) => {
     }
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Internal Server Error",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
       cause: error,
@@ -295,7 +295,7 @@ const deleteUser = async (req, res) => {
     }
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Internal Server Error",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
       cause: error,

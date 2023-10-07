@@ -49,7 +49,12 @@ const createContact = async (req, res) => {
 
   try {
     Contacts.create(req.body).then((data, err) => {
-      if (err) res.status(StatusCodes.BAD_REQUEST).json({ err });
+      if (err)  res.status(StatusCodes.BAD_REQUEST).json({
+        message: err.message,
+        statusCode: StatusCodes.BAD_REQUEST,
+        status: ReasonPhrases.BAD_REQUEST,
+        cause: error,
+      });
       else {
         let mailBody = {
           body: {
@@ -78,7 +83,7 @@ const createContact = async (req, res) => {
           })
           .catch((error) => {
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-              message: "Internal Server Error",
+              message: error.message,
               statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
               status: ReasonPhrases.INTERNAL_SERVER_ERROR,
             });
@@ -87,7 +92,7 @@ const createContact = async (req, res) => {
     });
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Internal Server Error",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
@@ -123,7 +128,7 @@ const getContact = async (req, res) => {
     }
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: `Internal server error`,
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
@@ -158,7 +163,7 @@ const getSingleContact = async (req, res) => {
       }
     } catch (error) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: `Internal server error`,
+        message: error.message,
         statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
         status: ReasonPhrases.INTERNAL_SERVER_ERROR,
       });
@@ -185,10 +190,10 @@ const updateContactInfo = async (req, res) => {
         { upsert: true }
       ).then((data, err) => {
         if (err)
-          res.status(StatusCodes.NOT_MODIFIED).json({
-            message: "Update Failed",
-            status: ReasonPhrases.NOT_MODIFIED,
-            statusCode: StatusCodes.NOT_MODIFIED,
+          res.status(StatusCodes.BAD_REQUEST).json({
+            message: err.message,
+            status: ReasonPhrases.BAD_REQUEST,
+            statusCode: StatusCodes.BAD_REQUEST,
             cause: err,
           });
         else {
@@ -209,7 +214,7 @@ const updateContactInfo = async (req, res) => {
     }
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Please Provide a Valid user id or Server not responding!",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
       cause: error,
@@ -238,10 +243,10 @@ const deleteContact = async (req, res) => {
     } else {
       Contacts.deleteOne({ _id: id }).then((data, err) => {
         if (err)
-          res.status(StatusCodes.NOT_IMPLEMENTED).json({
-            message: "Delete Failed",
-            status: ReasonPhrases.NOT_IMPLEMENTED,
-            statusCode: StatusCodes.NOT_IMPLEMENTED,
+          res.status(StatusCodes.BAD_REQUEST).json({
+            message: err.message,
+            status: ReasonPhrases.BAD_REQUEST,
+            statusCode: StatusCodes.BAD_REQUEST,
             cause: err,
           });
         else {
@@ -256,7 +261,7 @@ const deleteContact = async (req, res) => {
     }
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Internal Server Error",
+      message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
       cause: error,
