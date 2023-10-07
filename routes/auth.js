@@ -268,7 +268,7 @@ router.route("/user").get(getusers);
 
 router.route("/user/:id").put(updateUser);
 
-
+router.route("/user/:id").patch(updateUser);
 
 router.route("/user/session").post(isAuthenticated);
 router.route("/user/verify").get(varifyLogin);
