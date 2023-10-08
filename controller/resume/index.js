@@ -111,10 +111,11 @@ const getResume = async (req, res) => {
         result: resData,
       });
     } else {
-      return res.status(StatusCodes.NOT_FOUND).json({
-        message: `No information found`,
-        statusCode: StatusCodes.NOT_FOUND,
-        status: ReasonPhrases.NOT_FOUND,
+      return res.status(StatusCodes.OK).json({
+        message: `No resume found`,
+        statusCode: StatusCodes.OK,
+        status: ReasonPhrases.OK,
+        result: [],
       });
     }
   } catch (error) {
