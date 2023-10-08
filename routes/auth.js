@@ -13,13 +13,6 @@ const {
   protectedRoute,
   varifySession,forgetPassword,accountConfirm
 } = require("../controller/auth");
-const { authenticateToken } = require("../middleware/middleware");
-const {
-  profile,
-  updateUser,
-  getusers,
-  deleteUser,
-} = require("../controller/user");
 const {
   validateSignUpRequest,
   isRequestValidated,
@@ -206,103 +199,9 @@ router.route("/user/confirm-account/:token").post(accountConfirm);
  *        description: Server Error
  */
 
-router.route("/user/:id").get(profile);
-
-/** GET Methods */
-/**
- * @openapi
- * '/api/user':
- *  get:
- *     tags:
- *     - User Controller
- *     summary: Get all users
- *     parameters:
- *
- *     responses:
- *      200:
- *        description: Fetched Successfully
- *      400:
- *        description: Bad Request
- *      404:
- *        description: Not Found
- *      500:
- *        description: Server Error
- */
-
-router.route("/user").get(getusers);
-
-/** PUT Methods */
-/**
- * @openapi
- * '/api/user/{user_id}':
- *  put:
- *     tags:
- *     - User Controller
- *     summary: Modify a user
- *     parameters:
- *      - name: user_id
- *        in: path
- *        description: The user_id of the user
- *        required: true
- *     requestBody:
- *      required: true
- *      content:
- *        application/json:
- *           schema:
- *            type: object
- *            properties:
- *              firstName:
- *                type: string
- *                default: ''
- *              lastName:
- *                type: string
- *                default: ''
- *     responses:
- *      200:
- *        description: Modified
- *      400:
- *        description: Bad Request
- *      404:
- *        description: Not Found
- *      500:
- *        description: Server Error
- */
-
-router.route("/user/:id").put(updateUser);
-
-router.route("/user/:id").patch(updateUser);
-
 router.route("/user/session").post(isAuthenticated);
 router.route("/user/verify").get(varifyLogin);
 router.route("/user/protected").get(protectedRoute);
-router.route("/user/profile/:id").get(profile);
-router.route("/user/protected/resource").get(authenticateToken);
-
-/** DELETE Methods */
-    /**
-     * @openapi
-     * '/api/user/{userId}':
-     *  delete:
-     *     tags:
-     *     - User Controller
-     *     summary: Delete user by Id
-     *     parameters:
-     *      - name: userId
-     *        in: path
-     *        description: The unique Id of the user
-     *        required: true
-     *     responses:
-     *      200:
-     *        description: Removed
-     *      400:
-     *        description: Bad request
-     *      404:
-     *        description: Not Found
-     *      500:
-     *        description: Server Error
-     */
-
-router.route("/user/:id").delete(deleteUser);
 
 
 module.exports = router;
