@@ -61,7 +61,7 @@ const getusers = async (req, res) => {
   try {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
-    const users = await User.find({}, "-__v -hash_password")
+    const users = await User.find({}, "-__v -hash_password -resetToken -resetTokenExpiration -confirmToken -update_by")
       .skip((page - 1) * limit)
       .limit(limit)
       .sort({ updatedAt: 1 });
