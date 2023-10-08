@@ -23,16 +23,6 @@ function saveTokenToServer(userId, token) {
   redisClient.setex(userId, 3600, token); // Expires in 1 hour (in seconds)
 }
 
-// let config = {
-//   service: "gmail",
-//   auth: {
-//     user: "kishor81160@gmail.com",
-//     pass: "xvsy rvxv bktb zjld",
-//   },
-// };
-
-// let transporter = nodemailer.createTransport(config);
-
 var session;
 
 const signUp = async (req, res) => {
@@ -234,61 +224,54 @@ const resetPassword = async (req, res) => {
         statusCode: StatusCodes.BAD_REQUEST,
         status: ReasonPhrases.BAD_REQUEST,
       });
-    }
-
-    let MailGenerator = new Mailgen({
-      theme: "default",
-      product: {
-        name: "kishor",
-        link: "https://google.com",
-      },
-    });
-
-    let response = {
-      body: {
-        name: user.firstName,
-        intro: "Your password has been successfully reset.",
-        action: {
-          instructions: `You can now log in to your account with your new password.`,
-          button: {
-            color: "#22BC66", // Optional action button color
-            text: "Login Now",
-            link: `${process.env.LOGINHOST}/${process.env.CLIENTLOGINPAGE}`,
+    } else {
+      let mailBody = {
+        body: {
+          name: user.fullName,
+          intro: "Your password has been successfully reset.",
+          action: {
+            instructions: `You can now log in to your account with your new password.`,
+            button: {
+              color: "#22BC66", // Optional action button color
+              text: "Login Now",
+              link: `${process.env.LOGINHOST}/${process.env.CLIENTLOGINPAGE}`,
+            },
           },
+          outro:
+            "If you did not request this, please ignore this email and your password will remain unchanged.",
         },
-        outro:
-          "If you did not request this, please ignore this email and your password will remain unchanged.",
-      },
-    };
-    let mail = MailGenerator.generate(response);
-    const mailOptions = {
-      from: "kishor81160@gmail.com", // Your email address
-      to: user.email, // The user's email address
-      subject: "Password Reset Successful", // Email subject
-      html: mail, // Email text
-    };
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 is the saltRounds
-    user.hash_password = hashedPassword;
-    user.resetToken = undefined;
-    user.resetTokenExpiration = undefined;
+      };
+      const hashedPassword = await bcrypt.hash(password, 10); // 10 is the saltRounds
+      user.hash_password = hashedPassword;
+      user.resetToken = undefined;
+      user.resetTokenExpiration = undefined;
 
-    await user.save();
-    transporter
-      .sendMail(mailOptions)
-      .then(() => {
-        res.status(StatusCodes.OK).json({
-          message: "Password reset successfully",
-          statusCode: StatusCodes.OK,
-          status: ReasonPhrases.OK,
+      await user.save();
+
+      transporter
+        .sendMail(
+          createMailOptions(
+            "salted",
+            data.email,
+            `Password reset successfully`,
+            mailBody
+          )
+        )
+        .then(() => {
+          res.status(StatusCodes.OK).json({
+            message: "Password reset successfully",
+            statusCode: StatusCodes.OK,
+            status: ReasonPhrases.OK,
+          });
+        })
+        .catch((error) => {
+          res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: error.message,
+            statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+            status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+          });
         });
-      })
-      .catch((error) => {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-          message: error.message,
-          statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
-          status: ReasonPhrases.INTERNAL_SERVER_ERROR,
-        });
-      });
+    }
 
     // Password reset successful
     // return res.status(200).json({ message: "Password reset successfully" });
@@ -571,17 +554,9 @@ const forgetPassword = async (req, res) => {
           status: ReasonPhrases.BAD_REQUEST,
         });
       } else {
-        let MailGenerator = new Mailgen({
-          theme: "default",
-          product: {
-            name: "kishor",
-            link: "https://google.com",
-          },
-        });
-
-        let response = {
+        let mailBody = {
           body: {
-            name: user.firstName,
+            name: user.fullName,
             intro:
               "You are receiving this because you (or someone else) have requested a password reset for your account.",
             action: {
@@ -596,16 +571,16 @@ const forgetPassword = async (req, res) => {
               "If you did not request this, please ignore this email and your password will remain unchanged.",
           },
         };
-        let mail = MailGenerator.generate(response);
-        const mailOptions = {
-          from: "kishor81160@gmail.com", // Your email address
-          to: user.email, // The user's email address
-          subject: "Password Reset", // Email subject
-          html: mail, // Email text
-        };
 
         transporter
-          .sendMail(mailOptions)
+          .sendMail(
+            createMailOptions(
+              "salted",
+              data.email,
+              `Password reset email request`,
+              mailBody
+            )
+          )
           .then(() => {
             res.status(StatusCodes.OK).json({
               message:
