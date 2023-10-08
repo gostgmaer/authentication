@@ -5,19 +5,17 @@ const {
   getStatusCode,
 } = require("http-status-codes");
 const User = require("../models/auth");
-const Sessions = require("../models/session");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const shortid = require("shortid");
 // const { transporter } = require("../mail/mailer");
 const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
-const crypto = require("crypto");
-const { promisify } = require("util");
 const redis = require("redis");
 const sessionStore = require("../db/session");
 const redisClient = redis.createClient();
-const asyncGet = promisify(redisClient.get).bind(redisClient);
+const createMailOptions = require("../mail/mailOptions");
+const transporter = require("../mail/mailTransporter");
+// const Mailgenerator = require('../mail/mailgenerator');
 
 // Save the token on the server
 function saveTokenToServer(userId, token) {
@@ -25,15 +23,15 @@ function saveTokenToServer(userId, token) {
   redisClient.setex(userId, 3600, token); // Expires in 1 hour (in seconds)
 }
 
-let config = {
-  service: "gmail",
-  auth: {
-    user: "kishor81160@gmail.com",
-    pass: "xvsy rvxv bktb zjld",
-  },
-};
+// let config = {
+//   service: "gmail",
+//   auth: {
+//     user: "kishor81160@gmail.com",
+//     pass: "xvsy rvxv bktb zjld",
+//   },
+// };
 
-let transporter = nodemailer.createTransport(config);
+// let transporter = nodemailer.createTransport(config);
 
 var session;
 
@@ -60,13 +58,13 @@ const signUp = async (req, res) => {
   const user = await User.findOne({ email });
   const userId = await User.findOne({ username });
 
-  let MailGenerator = new Mailgen({
-    theme: "default",
-    product: {
-      name: "kishor",
-      link: "https://google.com",
-    },
-  });
+  // let MailGenerator = new Mailgen({
+  //   theme: "default",
+  //   product: {
+  //     name: "kishor",
+  //     link: "https://google.com",
+  //   },
+  // });
 
   if (user) {
     return res.status(StatusCodes.BAD_REQUEST).json({
@@ -81,40 +79,53 @@ const signUp = async (req, res) => {
       status: ReasonPhrases.BAD_REQUEST,
     });
   } else {
-    User.create(userData).then((data, err) => {
-      if (err) return res.status(StatusCodes.BAD_REQUEST).json({
-        message: err.message,
-        statusCode: StatusCodes.BAD_REQUEST,
-        status: ReasonPhrases.BAD_REQUEST,
-      });
+    const token = jwt.sign(
+      {
+        email: userData.email,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
+    User.create({
+      ...userData,
+      confirmToken: token,
+      isEmailconfirm: false,
+    }).then((data, err) => {
+      if (err)
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: err.message,
+          statusCode: StatusCodes.BAD_REQUEST,
+          status: ReasonPhrases.BAD_REQUEST,
+        });
       else {
         let mailBody = {
           body: {
             name: data.fullName,
-
-            intro: `Welcome to MyWeb ! We're very excited to have you on board. your username is: ${data.username}`,
+            intro: `Welcome to ${process.env.APPLICATION_NAME}! We are excited to have you on board.`,
+            additionalInfo: `Thank you for choosing ${process.env.APPLICATION_NAME}. You now have access to our premium features, including unlimited storage and priority customer support.`,
             action: {
-              instructions: "To get started with MyWeb, please click here:",
+              instructions: `To get started with ${process.env.APPLICATION_NAME}, please click here:`,
               button: {
                 color: "#22BC66", // Optional action button color
-                text: "Login your account",
-                link: `${process.env.LOGINHOST}/${process.env.CLIENTLOGINPAGE}`,
+                text: "Confirm Your Account",
+                link: `${process.env.LOGINHOST}/${process.env.CLIENTCONFIRMURL}?token=${token}`,
               },
             },
             outro:
               "Need help, or have questions? Just reply to this email, we'd love to help.",
           },
         };
-        let mail = MailGenerator.generate(mailBody);
-        const mailOptions = {
-          from: "kishor81160@gmail.com", // Your email address
-          to: data.email, // The user's email address
-          subject: "Account has been Created", // Email subject
-          html: mail, // Email text
-        };
-
         transporter
-          .sendMail(mailOptions)
+          .sendMail(
+            createMailOptions(
+              "salted",
+              data.email,
+              `Welcome to ${process.env.APPLICATION_NAME} - Confirm Your Email`,
+              mailBody
+            )
+          )
           .then(() => {
             res.status(StatusCodes.CREATED).json({
               message: "User created Successfully",
@@ -597,7 +608,8 @@ const forgetPassword = async (req, res) => {
           .sendMail(mailOptions)
           .then(() => {
             res.status(StatusCodes.OK).json({
-              message: "Password reset email has been sent successfully. Please check your mailbox",
+              message:
+                "Password reset email has been sent successfully. Please check your mailbox",
               statusCode: StatusCodes.OK,
               status: ReasonPhrases.OK,
             });
@@ -607,7 +619,6 @@ const forgetPassword = async (req, res) => {
               message: error.message,
               statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
               status: ReasonPhrases.INTERNAL_SERVER_ERROR,
-           
             });
           });
       }
@@ -619,7 +630,42 @@ const forgetPassword = async (req, res) => {
       message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
-     
+    });
+  }
+};
+
+const accountConfirm = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const user = await User.findOne(
+      {
+        confirmToken: token,
+      },
+      "email username _id firstName lastName"
+    );
+
+    if (!user) {
+      res.status(StatusCodes.BAD_REQUEST).json({
+        message: "Invalid or expired token",
+        statusCode: StatusCodes.BAD_REQUEST,
+        status: ReasonPhrases.BAD_REQUEST,
+      });
+    } else {
+      user.isEmailconfirm = true;
+      await user.save();
+      res.status(StatusCodes.OK).json({
+        message: "Accoount Confirm successfully",
+        statusCode: StatusCodes.OK,
+        status: ReasonPhrases.OK,
+        result: user,
+      });
+    }
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
   }
 };
@@ -635,4 +681,5 @@ module.exports = {
   protectedRoute,
   varifySession,
   forgetPassword,
+  accountConfirm,
 };

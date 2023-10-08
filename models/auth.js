@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema(
     },
     resetToken: String,
     resetTokenExpiration: Date,
+    confirmToken: String,
+    isEmailconfirm: {
+      type: Boolean,
+    },
     role: {
       type: String,
       enum: ["user", "admin"],

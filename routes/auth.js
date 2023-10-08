@@ -11,7 +11,7 @@ const {
   singout,
   isAuthenticated,
   protectedRoute,
-  varifySession,forgetPassword
+  varifySession,forgetPassword,accountConfirm
 } = require("../controller/auth");
 const { authenticateToken } = require("../middleware/middleware");
 const {
@@ -180,6 +180,8 @@ router
   .route("/user/register")
   .post(validateSignUpRequest, isRequestValidated, signUp);
 
+  
+router.route("/user/confirm-account/:token").post(accountConfirm);
 /** GET Methods */
 /**
  * @openapi
