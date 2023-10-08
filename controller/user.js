@@ -29,7 +29,7 @@ const profile = async (req, res) => {
     });
   } else {
     try {
-      const userId = await User.findOne({ _id: id }, "-hash_password -__v");
+      const userId = await User.findOne({ _id: id }, "-hash_password -__v -confirmToken");
 
       if (userId.id) {
         // const resdata = userId._doc;
