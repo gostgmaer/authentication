@@ -9,15 +9,7 @@ const User = require("../models/auth");
 const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
 const jwt = require("jsonwebtoken");
-let config = {
-  service: "gmail",
-  auth: {
-    user: "kishor81160@gmail.com",
-    pass: "xvsy rvxv bktb zjld",
-  },
-};
 
-let transporter = nodemailer.createTransport(config);
 
 const profile = async (req, res) => {
   const { id } = req.params;
@@ -29,7 +21,10 @@ const profile = async (req, res) => {
     });
   } else {
     try {
-      const userId = await User.findOne({ _id: id }, "-hash_password -__v -confirmToken");
+      const userId = await User.findOne(
+        { _id: id },
+        "-hash_password -__v -confirmToken"
+      );
 
       if (userId.id) {
         // const resdata = userId._doc;
@@ -61,7 +56,10 @@ const getusers = async (req, res) => {
   try {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
-    const users = await User.find({}, "-__v -hash_password -resetToken -resetTokenExpiration -confirmToken -update_by")
+    const users = await User.find(
+      {},
+      "-__v -hash_password -resetToken -resetTokenExpiration -confirmToken -update_by"
+    )
       .skip((page - 1) * limit)
       .limit(limit)
       .sort({ updatedAt: 1 });
@@ -90,71 +88,54 @@ const getusers = async (req, res) => {
 };
 
 const Profileupdate = (req, res) => {
-  if (!req.body) {
-    return res.status(400).send({ message: "Data to update can not be empty" });
-  }
-
-  const id = req.params.id;
-
-  let MailGenerator = new Mailgen({
-    theme: "default",
-    product: {
-      name: "kishor",
-      link: "https://google.com",
-    },
-  });
-
-  userinfo
-    .findByIdAndUpdate(
-      id,
-      { $set: { ...req.body } },
-      { useFindAndModify: false }
-    )
-    .then((data) => {
-      let mailBody = {
-        body: {
-          name: data.fullName,
-
-          intro: `${data.username} Your profile is updated`,
-          // action: {
-          //   instructions: "To get started with MyWeb, please click here:",
-          //   button: {
-          //     color: "#22BC66", // Optional action button color
-          //     text: "Login your account",
-          //     link: "https://mailgen.js/confirm?s=d9729feb74992cc3482b350163a1a010",
-          //   },
-          // },
-          outro:
-            "Need help, or have questions? Just reply to this email, we'd love to help.",
-        },
-      };
-      let mail = MailGenerator.generate(mailBody);
-      const mailOptions = {
-        from: "kishor81160@gmail.com", // Your email address
-        to: data.email, // The user's email address
-        subject: "Account has been Updated Successful!", // Email subject
-        html: mail, // Email text
-      };
-
-      transporter.sendMail(mailOptions).then(() => {
-        res.status(StatusCodes.CREATED).json({
-          message: "User created Successfully",
-          status: ReasonPhrases.CREATED,
-          statusCode: StatusCodes.CREATED,
-        });
+  try {
+    if (!req.body) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        message: "Data to update can not be empty",
+        status: ReasonPhrases.NOT_FOUND,
+        statusCode: StatusCodes.NOT_FOUND,
+        data: data,
       });
-
-      if (!data) {
-        res.status(404).send({
-          message: `Cannot Update user with ${id}. Maybe user not found!`,
+    } else {
+      const id = req.params.id;
+      userinfo
+        .findByIdAndUpdate(
+          id,
+          { $set: { ...req.body } },
+          { useFindAndModify: false }
+        )
+        .then((data) => {
+          if (!data) {
+            res.status(StatusCodes.NOT_FOUND).json({
+              message: `Cannot Update user with ${id}. Maybe user not found!`,
+              status: ReasonPhrases.NOT_FOUND,
+              statusCode: StatusCodes.NOT_FOUND,
+              data: data,
+            });
+          } else {
+            res.status(StatusCodes.OK).json({
+              message: "User Update Successfully",
+              status: ReasonPhrases.OK,
+              statusCode: StatusCodes.OK,
+              data: data,
+            });
+          }
+        })
+        .catch((err) => {
+          res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: err.message,
+            statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+            status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+          });
         });
-      } else {
-        res.send(data);
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({ message: "Error Update user information" });
+    }
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      status: ReasonPhrases.INTERNAL_SERVER_ERROR,
     });
+  }
 };
 
 const updateUser = async (req, res) => {
@@ -164,7 +145,6 @@ const updateUser = async (req, res) => {
   if (token) {
     decodeduser = jwt.verify(token, process.env.JWT_SECRET);
   }
-
 
   const { id } = req.params;
   try {
@@ -181,13 +161,6 @@ const updateUser = async (req, res) => {
     var myquery = { _id: id };
 
     if (user) {
-      let MailGenerator = new Mailgen({
-        theme: "default",
-        product: {
-          name: "kishor",
-          link: "https://google.com",
-        },
-      });
       try {
         const body = { ...req.body, update_by: decodeduser?.email };
 
@@ -201,33 +174,11 @@ const updateUser = async (req, res) => {
                 cause: err,
               });
             else {
-              let mailBody = {
-                body: {
-                  name: user.fullName,
-                  table: {
-                    data: req.body,
-                  },
-
-                  intro: `${user.username} Your profile is updated`,
-                  outro:
-                    "Need help, or have questions? Just reply to this email, we'd love to help.",
-                },
-              };
-              let mail = MailGenerator.generate(mailBody);
-              const mailOptions = {
-                from: "kishor81160@gmail.com", // Your email address
-                to: user.email, // The user's email address
-                subject: "Account has been Updated Successful!", // Email subject
-                html: mail, // Email text
-              };
-
-              transporter.sendMail(mailOptions).then(() => {
-                res.status(StatusCodes.OK).json({
-                  message: "User Update Successfully",
-                  status: ReasonPhrases.OK,
-                  statusCode: StatusCodes.OK,
-                  data: data,
-                });
+              res.status(StatusCodes.OK).json({
+                message: "User Update Successfully",
+                status: ReasonPhrases.OK,
+                statusCode: StatusCodes.OK,
+                data: data,
               });
             }
           }

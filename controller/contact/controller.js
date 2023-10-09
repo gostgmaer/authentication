@@ -38,7 +38,6 @@ const createContact = async (req, res) => {
     });
   }
 
-
   let MailGenerator = new Mailgen({
     theme: "default",
     product: {
@@ -49,12 +48,13 @@ const createContact = async (req, res) => {
 
   try {
     Contacts.create(req.body).then((data, err) => {
-      if (err)  res.status(StatusCodes.BAD_REQUEST).json({
-        message: err.message,
-        statusCode: StatusCodes.BAD_REQUEST,
-        status: ReasonPhrases.BAD_REQUEST,
-        cause: error,
-      });
+      if (err)
+        res.status(StatusCodes.BAD_REQUEST).json({
+          message: err.message,
+          statusCode: StatusCodes.BAD_REQUEST,
+          status: ReasonPhrases.BAD_REQUEST,
+          cause: error,
+        });
       else {
         let mailBody = {
           body: {
