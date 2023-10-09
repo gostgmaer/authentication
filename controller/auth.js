@@ -578,7 +578,7 @@ const forgetPassword = async (req, res) => {
             createMailOptions(
               "salted",
               user.email,
-              `Password reset email request`,
+              `Password reset request`,
               mailBody
             )
           )
