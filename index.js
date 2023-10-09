@@ -38,7 +38,12 @@ app.get("/api", (req, res) => {
   res.send("API is working!");
 });
 
-app.use("/api/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/doc/swagger.json", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.get("/doc/swagger.json", (req, res) => {
+  res.send("./doc/swagger.json");
+});
 
 //app route
 app.use("/api", authRouter);
