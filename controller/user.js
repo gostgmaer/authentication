@@ -10,7 +10,6 @@ const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
 const jwt = require("jsonwebtoken");
 
-
 const profile = async (req, res) => {
   const { id } = req.params;
   if (!id) {
