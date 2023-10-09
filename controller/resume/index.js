@@ -9,13 +9,7 @@ const Resumes = require("../../models/resume");
 const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
 const jwt = require("jsonwebtoken");
-let config = {
-  service: "gmail",
-  auth: {
-    user: "kishor81160@gmail.com",
-    pass: "xvsy rvxv bktb zjld",
-  },
-};
+
 
 const createResume = async (req, res) => {
   try {

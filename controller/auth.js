@@ -225,6 +225,7 @@ const resetPassword = async (req, res) => {
         status: ReasonPhrases.BAD_REQUEST,
       });
     } else {
+
       let mailBody = {
         body: {
           name: user.fullName,
@@ -252,7 +253,7 @@ const resetPassword = async (req, res) => {
         .sendMail(
           createMailOptions(
             "salted",
-            data.email,
+            user.email,
             `Password reset successfully`,
             mailBody
           )
@@ -576,7 +577,7 @@ const forgetPassword = async (req, res) => {
           .sendMail(
             createMailOptions(
               "salted",
-              data.email,
+              user.email,
               `Password reset email request`,
               mailBody
             )
