@@ -7,11 +7,10 @@ const {
   signUp,
   signIn,
   resetPassword,
-  varifyLogin,
   singout,
-  isAuthenticated,
-  protectedRoute,
-  varifySession,forgetPassword,accountConfirm
+  varifySession,
+  forgetPassword,
+  accountConfirm,
 } = require("../controller/auth");
 const {
   validateSignUpRequest,
@@ -22,186 +21,505 @@ const {
 } = require("../validators/auth");
 
 /**
- * @openapi
- * '/api/user/login':
- *  post:
+ * @swagger
+ * tags:
+ *   - name: Auth Controller
+ *     description: Authentication and user registration operations
+ * /api/user/register:
+ *   post:
+ *     summary: Register a new user
  *     tags:
- *     - User Controller
- *     summary: Login as a user
+ *       - Auth Controller
  *     requestBody:
- *      required: true
- *      content:
- *        application/json:
+ *       required: true
+ *       content:
+ *         application/json:
  *           schema:
- *            type: object
- *            required:
- *              - email
- *              - password
- *            properties:
- *              email:
- *                type: string
- *                default: johndoe@mail.com
- *              password:
- *                type: string
- *                default: johnDoe20!@
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               username:
+ *                 type: string
  *     responses:
- *      201:
- *        description: Created
- *      409:
- *        description: Conflict
- *      404:
- *        description: Not Found
- *      500:
- *        description: Server Error
- */
-router
-  .route("/user/login")
-  .post(validateSignIpRequest, isRequestValidated, signIn);
-
-/**
- * @openapi
- * '/api/user/verify/session':
- *  post:
- *     tags:
- *     - User Controller
- *     summary: Verify a user
- *     requestBody:
- *      required: true
- *      content:
- *        application/json:
- *           schema:
- *            type: object
- *            required:
- *              - username
- *            properties:
- *              username:
- *                type: string
- *                default: johndoe
- *     responses:
- *      201:
- *        description: Created
- *      409:
- *        description: Conflict
- *      404:
- *        description: Not Found
- *      500:
- *        desccription: Server Error
- */
-
-router.route("/user/verify/session").post(varifySession);
-
-
-/**
- * @openapi
- * '/api/user/reset-password':
- *  post:
- *     tags:
- *     - User Controller
- *     summary: Reset user password
- *     requestBody:
- *      required: true
- *      content:
- *        application/json:
- *           schema:
- *            type: object
- *            required:
- *              - email
- *              - newPassword
- *            properties:
- *              email:
- *                type: string
- *                default: johndoe@mail.com
- *              newPassword:
- *                type: string
- *                default: johnDoe20!@
- *     responses:
- *      201:
- *        description: Created
- *      409:
- *        description: Conflict
- *      404:
- *        description: Not Found
- *      500:
- *        description: Server Error
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       400:
+ *         description: Bad Request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       409:
+ *         description: User or username already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
  */
 
-router.route("/user/reset-password/:token").post(validateResetpassword, isRequestValidated,resetPassword);
-router.route("/user/forget-password").post(validateForgetPassword, isRequestValidated,forgetPassword);
-
-router.route("/user/signout").post(singout);
-
-//user registration
-/** POST Methods */
-/**
- * @openapi
- * '/api/user/register':
- *  post:
- *     tags:
- *     - User Controller
- *     summary: Create a user
- *     requestBody:
- *      required: true
- *      content:
- *        application/json:
- *           schema:
- *            type: object
- *            required:
- *              - username
- *              - email
- *              - password
- *            properties:
- *              username:
- *                type: string
- *                default: johndoe
- *              email:
- *                type: string
- *                default: johndoe@mail.com
- *              password:
- *                type: string
- *                default: johnDoe20!@
- *     responses:
- *      201:
- *        description: Created
- *      409:
- *        description: Conflict
- *      404:
- *        description: Not Found
- *      500:
- *        description: Server Error
- */
 router
   .route("/user/register")
   .post(validateSignUpRequest, isRequestValidated, signUp);
 
-  
-router.route("/user/confirm-account/:token").post(accountConfirm);
-/** GET Methods */
 /**
- * @openapi
- * '/api/user/{id}':
- *  get:
+ * @swagger
+ * /api/user/auth/login:
+ *   post:
+ *     summary: Sign in a user
  *     tags:
- *     - User Controller
- *     summary: Get a user by id
- *     parameters:
- *      - name: id
- *        in: path
- *        description: The id of the user
- *        required: true
+ *       - Auth Controller
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
  *     responses:
- *      200:
- *        description: Fetched Successfully
- *      400:
- *        description: Bad Request
- *      404:
- *        description: Not Found
- *      500:
- *        description: Server Error
+ *       200:
+ *         description: User signed in successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *
+ *                 session_id:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       400:
+ *         description: Bad Request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
  */
 
-router.route("/user/session").post(isAuthenticated);
-router.route("/user/verify").get(varifyLogin);
-router.route("/user/protected").get(protectedRoute);
+router
+  .route("/user/auth/login")
+  .post(validateSignIpRequest, isRequestValidated, signIn);
 
+/**
+ * @swagger
+ * /api/user/auth/verify/session:
+ *   post:
+ *     summary: Verify user session
+ *     tags:
+ *       - Auth Controller
+ *     parameters:
+ *       - in: header
+ *         name: authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: JWT token for authorization
+ *       - in: header
+ *         name: session_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Session ID
+ *     responses:
+ *       200:
+ *         description: User session is valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *
+ *                 token:
+ *                   type: string
+ *       400:
+ *         description: Bad Request or Session Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *                 cause:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized or Session Expired
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       403:
+ *         description: Forbidden - Authorization Token is Not Valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ */
+
+router.route("/user/auth/verify/session").post(varifySession);
+
+/**
+ * @swagger
+ * /api/user/auth/reset-password/{token}:
+ *   post:
+ *     summary: Reset user password
+ *     tags:
+ *       - Auth Controller
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Password reset token received via email
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       400:
+ *         description: Invalid or expired token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ */
+router
+  .route("/user/auth/reset-password/:token")
+  .post(validateResetpassword, isRequestValidated, resetPassword);
+
+/**
+ * @swagger
+ * /api/user/auth/forget-password:
+ *   post:
+ *     summary: Request a password reset link via email
+ *     tags:
+ *       - Auth Controller
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       400:
+ *         description: Email address is not registered or reset password email generation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ */
+
+router
+  .route("/user/auth/forget-password")
+  .post(validateForgetPassword, isRequestValidated, forgetPassword);
+
+/**
+ * @swagger
+ * /api/user/auth/confirm-account/{token}:
+ *   post:
+ *     summary: Confirm user account via email token
+ *     tags:
+ *       - Auth Controller
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Confirmation token received via email
+ *     responses:
+ *       200:
+ *         description: Account confirmed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *                 result:
+ *                   type: object
+ *
+ *       400:
+ *         description: Invalid or expired token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ */
+
+router.route("/user/auth/confirm-account/:token").post(accountConfirm);
+
+/**
+ * @swagger
+ * /api/user/auth/signout:
+ *   post:
+ *     summary: Sign out and destroy user session
+ *     tags:
+ *       - Auth Controller
+ *     responses:
+ *       200:
+ *         description: Logout success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 statusCode:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ */
+
+router.route("/user/auth/signout").post(singout);
 
 module.exports = router;
