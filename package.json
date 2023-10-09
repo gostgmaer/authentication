@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
-    "swagger-autogen": "node swagger.js"
+    "swagger-autogen": "node ./swagger.js"
   },
   "author": "",
   "license": "ISC",
@@ -31,10 +31,12 @@
     "nodemailer-mandrill-transport": "^1.2.0",
     "redis": "^4.6.10",
     "shortid": "^2.2.16",
-    "swagger-autogen": "^2.23.6",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "util": "^0.12.5",
     "zipyai": "^1.7.3"
+  },
+  "devDependencies": {
+    "swagger-autogen": "^2.23.6"
   }
 }
