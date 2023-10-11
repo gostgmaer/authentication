@@ -39,9 +39,9 @@ const endpointsFiles = ["./routes/*.js"];
 
 // swaggerAutogen(outputFile, endpointsFiles, options);
 
-swaggerAutogen(outputFile, endpointsFiles, options).then(() => {
-  require("./index.js"); // Your project's root file
-});
+// swaggerAutogen(outputFile, endpointsFiles, options).then(() => {
+//   require("./index.js"); // Your project's root file
+// });
 
 // const swaggerSpec = swaggerJsdoc(options);
 

@@ -7,6 +7,7 @@ const {
   deleteResume,
   createResume,
 } = require("../controller/resume/index");
+const authenticateToken = require("../middleware/authMiddleware");
 const {
   validateCreateContact,
   isRequestValidated,
@@ -14,10 +15,15 @@ const {
 
 resumeRoute
   .route("/resume/create")
-  .post(validateCreateContact, isRequestValidated, createResume);
-resumeRoute.route("/resume/:id").get(getSingleResume);
-resumeRoute.route("/resume").get(getResume);
-resumeRoute.route("/resume/:id").patch(updateResumeInfo);
-resumeRoute.route("/resume/:id").delete(deleteResume);
+  .post(
+    authenticateToken,
+    validateCreateContact,
+    isRequestValidated,
+    createResume
+  );
+resumeRoute.route("/resume/:id").get(authenticateToken, getSingleResume);
+resumeRoute.route("/resume").get(authenticateToken, getResume);
+resumeRoute.route("/resume/:id").patch(authenticateToken, updateResumeInfo);
+resumeRoute.route("/resume/:id").delete(authenticateToken, deleteResume);
 
 module.exports = resumeRoute;

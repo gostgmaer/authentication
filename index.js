@@ -7,13 +7,14 @@ var cors = require("cors");
 const session = require("express-session");
 const sessionStore = require("./db/session");
 const authRouter = require("./routes/auth");
+const unauthorized = require("./routes/aunauthorized");
 const contactRoute = require("./routes/contact");
 const resumeRoute = require("./routes/resume");
 const genericRoute = require("./routes/generic");
 const userRoute = require("./routes/user");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
-const authenticateToken = require("./middleware/authMiddleware");
+
 app.use(
   session({
     store: sessionStore,
@@ -39,7 +40,6 @@ app.get("/api", (req, res) => {
 });
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use("/doc/swagger.json", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get("/doc/swagger.json", (req, res) => {
   res.send("./doc/swagger.json");
@@ -47,10 +47,12 @@ app.get("/doc/swagger.json", (req, res) => {
 
 //app route
 app.use("/api", authRouter);
-app.use("/api", authenticateToken, contactRoute);
-app.use("/api", authenticateToken, resumeRoute);
-app.use("/api", authenticateToken, userRoute);
+app.use("/api", contactRoute);
+app.use("/api", resumeRoute);
+app.use("/api", userRoute);
 app.use("/api", genericRoute);
+app.use("/api", unauthorized);
+
 //Port and Connect to DB
 
 const port = process.env.PORT || 5000;
