@@ -77,12 +77,47 @@ const createContact = async (req, res) => {
 
 const getContact = async (req, res) => {
   try {
-    const page = parseInt(req.query.page);
-    const limit = parseInt(req.query.limit);
+    const { sort, page, limit, filter } = req.query;
+
+    var arrayOfValues = {};
+    const selectKeys = req?.query?.select_keys;
+    if (selectKeys) {
+      const cleanedArray = selectKeys
+        .split(",")
+        .map((value) => value.replace(/'/g, ""));
+      arrayOfValues = createProjectionFromArray(cleanedArray);
+    }
+
+    var query = {};
+
+    if (filter) {
+      const filterObj = JSON.parse(filter);
+      for (const key in filterObj) {
+        query[key] = filterObj[key];
+      }
+    }
+
+    var sortOptions = {};
+
+    if (sort) {
+      const [sortKey, sortOrder] = sort.split(":");
+      sortOptions[sortKey] = sortOrder === "desc" ? -1 : 1;
+    }
+
+    var skip = 0;
+
+    if (limit) {
+      skip = (parseInt(page) - 1) * parseInt(limit);
+    }
+
+    // const page = parseInt(req.query.page);
+    // const limit = parseInt(req.query.limit);
     const contacts = await Contacts.find({}, "-__v")
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({});
+      .find({ ...query }, { projection: arrayOfValues })
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .toArray();
 
     if (contacts.length) {
       contacts.forEach((element) => {
