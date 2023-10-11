@@ -4,92 +4,68 @@ const {
   getReasonPhrase,
   getStatusCode,
 } = require("http-status-codes");
-
+const createMailOptions = require("../../mail/mailOptions");
+const transporter = require("../../mail/mailTransporter");
 const Contacts = require("../../models/contact");
 const nodemailer = require("nodemailer");
 const Mailgen = require("mailgen");
 
-let config = {
-  service: "gmail",
-  auth: {
-    user: "kishor81160@gmail.com",
-    pass: "xvsy rvxv bktb zjld",
-  },
-};
-
-let transporter = nodemailer.createTransport(config);
-
 const createContact = async (req, res) => {
-  const {
-    firstName,
-    lastName,
-    email,
-    contactNumber,
-    user_id,
-    address,
-    message,
-    socialMedia,
-  } = req.body;
-  if (!firstName || !lastName || !email || !message) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      message: "Please Provide Required Information",
-      statusCode: StatusCodes.BAD_REQUEST,
-      status: ReasonPhrases.BAD_REQUEST,
-    });
-  }
-
-  let MailGenerator = new Mailgen({
-    theme: "default",
-    product: {
-      name: "kishor",
-      link: "https://google.com",
-    },
-  });
-
   try {
-    Contacts.create(req.body).then((data, err) => {
-      if (err)
-        res.status(StatusCodes.BAD_REQUEST).json({
-          message: err.message,
-          statusCode: StatusCodes.BAD_REQUEST,
-          status: ReasonPhrases.BAD_REQUEST,
-          cause: error,
-        });
-      else {
-        let mailBody = {
-          body: {
-            name: data.fullName,
-            intro: `We have Received your query`,
-
-            outro: "We'll Soon Connect with you be patients",
-          },
-        };
-        let mail = MailGenerator.generate(mailBody);
-        const mailOptions = {
-          from: "kishor81160@gmail.com", // Your email address
-          to: data.email, // The user's email address
-          subject: "We are hare to help", // Email subject
-          html: mail, // Email text
-        };
-
-        transporter
-          .sendMail(mailOptions)
-          .then(() => {
-            res.status(StatusCodes.CREATED).json({
-              message: "Send Successfully!",
-              status: ReasonPhrases.CREATED,
-              statusCode: StatusCodes.CREATED,
-            });
-          })
-          .catch((error) => {
-            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-              message: error.message,
-              statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
-              status: ReasonPhrases.INTERNAL_SERVER_ERROR,
-            });
+    const { firstName, lastName, email, message } = req.body;
+    if (!firstName || !lastName || !email || !message) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "Please Provide Required Information",
+        statusCode: StatusCodes.BAD_REQUEST,
+        status: ReasonPhrases.BAD_REQUEST,
+      });
+    } else {
+      Contacts.create(req.body).then((data, err) => {
+        if (err)
+          res.status(StatusCodes.BAD_REQUEST).json({
+            message: err.message,
+            statusCode: StatusCodes.BAD_REQUEST,
+            status: ReasonPhrases.BAD_REQUEST,
+            cause: error,
           });
-      }
-    });
+        else {
+          let mailBody = {
+            body: {
+              name: data.fullName,
+              intro: `Welcome to ${process.env.APPLICATION_NAME}! We are excited to work with you.`,
+              additionalInfo: `Thank you for choosing ${process.env.APPLICATION_NAME}. You now have access to our premium features, priority customer support.`,
+
+              outro:
+                "Need help, or have questions? Just reply to this email, we'd love to help.",
+            },
+          };
+
+          transporter
+            .sendMail(
+              createMailOptions(
+                "salted",
+                data.email,
+                `Welcome to ${process.env.APPLICATION_NAME} - We Received Your Query`,
+                mailBody
+              )
+            )
+            .then(() => {
+              res.status(StatusCodes.CREATED).json({
+                message: "Contact Send Successfully",
+                status: ReasonPhrases.CREATED,
+                statusCode: StatusCodes.CREATED,
+              });
+            })
+            .catch((error) => {
+              res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                message: error.message,
+                statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+                status: ReasonPhrases.INTERNAL_SERVER_ERROR,
+              });
+            });
+        }
+      });
+    }
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: error.message,
@@ -101,12 +77,47 @@ const createContact = async (req, res) => {
 
 const getContact = async (req, res) => {
   try {
-    const page = parseInt(req.query.page);
-    const limit = parseInt(req.query.limit);
+    const { sort, page, limit, filter } = req.query;
+
+    var arrayOfValues = {};
+    const selectKeys = req?.query?.select_keys;
+    if (selectKeys) {
+      const cleanedArray = selectKeys
+        .split(",")
+        .map((value) => value.replace(/'/g, ""));
+      arrayOfValues = createProjectionFromArray(cleanedArray);
+    }
+
+    var query = {};
+
+    if (filter) {
+      const filterObj = JSON.parse(filter);
+      for (const key in filterObj) {
+        query[key] = filterObj[key];
+      }
+    }
+
+    var sortOptions = {};
+
+    if (sort) {
+      const [sortKey, sortOrder] = sort.split(":");
+      sortOptions[sortKey] = sortOrder === "desc" ? -1 : 1;
+    }
+
+    var skip = 0;
+
+    if (limit) {
+      skip = (parseInt(page) - 1) * parseInt(limit);
+    }
+
+    // const page = parseInt(req.query.page);
+    // const limit = parseInt(req.query.limit);
     const contacts = await Contacts.find({}, "-__v")
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ });
+      .find({ ...query }, { projection: arrayOfValues })
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .toArray();
 
     if (contacts.length) {
       contacts.forEach((element) => {
