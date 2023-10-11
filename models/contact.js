@@ -24,6 +24,13 @@ const contactSchema = new mongoose.Schema(
     contactNumber: {
       type: String,
     },
+    country: {
+      type: String,
+    },
+    company: {
+      type: String,
+    },
+    subscribe: Boolean,
     user_id: {
       type: String,
     },
@@ -41,6 +48,7 @@ const contactSchema = new mongoose.Schema(
       type: String,
       maxlength: 100000, // Adjust the maximum length as needed
     },
+    acknoledge:Boolean,
     socialMedia: {
       facebook: String,
       twitter: String,

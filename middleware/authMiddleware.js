@@ -12,14 +12,6 @@ const secretKey = process.env.JWT_SECRET; // Replace with your actual secret key
 function authenticateToken(req, res, next) {
   try {
     const { authorization, session_id } = req.headers;
-    //   const sessionId = req?.headers?.session_id;
-    //   if (!authorization || !authorization.startsWith('Bearer ')) {
-    //     return res.sendStatus(401); // Unauthorized
-    //   }
-
-    // Extract the token without the "Bearer " prefix
-    //   const token = authHeader.split(" ")[1];
-
     if (!authorization) {
       res.status(StatusCodes.UNAUTHORIZED).json({
         message: "Session Expired",

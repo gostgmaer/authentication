@@ -1,7 +1,7 @@
 const express = require("express");
 var session = require("express-session");
 const userRoute = express.Router();
-
+const authenticateToken = require("../middleware/authMiddleware");
 const {
   profile,
   updateUser,
@@ -80,7 +80,7 @@ const {
  *                   type: string
  */
 
-userRoute.route("/user/:id").get(profile);
+userRoute.route("/user/:id").get(authenticateToken,profile);
 /**
  * @swagger
  * /user:
@@ -151,7 +151,7 @@ userRoute.route("/user/:id").get(profile);
  *                   type: string
  */
 
-userRoute.route("/user").get(getusers);
+userRoute.route("/user").get(authenticateToken,getusers);
 
 /**
  * @swagger
@@ -243,7 +243,7 @@ userRoute.route("/user").get(getusers);
  *                 status:
  *                   type: string
  */
-userRoute.route("/user/:id").patch(updateUser);
+userRoute.route("/user/:id").patch(authenticateToken,updateUser);
 
 /**
  * @swagger
@@ -315,7 +315,7 @@ userRoute.route("/user/:id").patch(updateUser);
  *                 status:
  *                   type: string
  */
-userRoute.route("/user/profile/:id").get(profile);
+userRoute.route("/user/profile/:id").get(authenticateToken,profile);
 
 /**
  * @swagger
@@ -387,6 +387,6 @@ userRoute.route("/user/profile/:id").get(profile);
  *                 status:
  *                   type: string
  */
-userRoute.route("/user/:id").delete(deleteUser);
+userRoute.route("/user/:id").delete(authenticateToken,deleteUser);
 
 module.exports = userRoute;

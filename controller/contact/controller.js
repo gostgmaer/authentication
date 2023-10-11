@@ -106,7 +106,7 @@ const getContact = async (req, res) => {
     const contacts = await Contacts.find({}, "-__v")
       .skip((page - 1) * limit)
       .limit(limit)
-      .sort({ updatedAt: -1 });
+      .sort({ });
 
     if (contacts.length) {
       contacts.forEach((element) => {

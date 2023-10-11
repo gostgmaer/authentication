@@ -1,5 +1,6 @@
 const express = require("express");
 const contactRoute = express.Router();
+const authenticateToken = require("../middleware/authMiddleware");
 const {
   updateContactInfo,
   deleteContact,
@@ -12,12 +13,9 @@ const {
   isRequestValidated,
 } = require("../validators/contact");
 
-contactRoute
-  .route("/contact/create")
-  .post(validateCreateContact, isRequestValidated, createContact);
-contactRoute.route("/contact/:id").get(getSingleContact);
-contactRoute.route("/contact").get(getContact);
-contactRoute.route("/contact/:id").patch(updateContactInfo);
-contactRoute.route("/contact/:id").delete(deleteContact);
+contactRoute.route("/contact/:id").get(authenticateToken, getSingleContact);
+contactRoute.route("/contact").get(authenticateToken, getContact);
+contactRoute.route("/contact/:id").patch(authenticateToken, updateContactInfo);
+contactRoute.route("/contact/:id").delete(authenticateToken, deleteContact);
 
 module.exports = contactRoute;
