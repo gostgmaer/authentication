@@ -8,7 +8,7 @@ const createMailOptions = require("../../mail/mailOptions");
 const transporter = require("../../mail/mailTransporter");
 const Contacts = require("../../models/contact");
 const nodemailer = require("nodemailer");
-const Mailgen = require("mailgen");
+const { createProjectionFromArray } = require("../../utils/service");
 
 const createContact = async (req, res) => {
   try {
@@ -77,17 +77,16 @@ const createContact = async (req, res) => {
 
 const getContact = async (req, res) => {
   try {
-    const { sort, page, limit, filter } = req.query;
+    const { sort, page, limit, filter, select_keys } = req.query;
 
-    var arrayOfValues = {};
-    const selectKeys = req?.query?.select_keys;
+    var arrayOfValues = "";
+    const selectKeys = select_keys;
     if (selectKeys) {
       const cleanedArray = selectKeys
         .split(",")
         .map((value) => value.replace(/'/g, ""));
       arrayOfValues = createProjectionFromArray(cleanedArray);
     }
-
     var query = {};
 
     if (filter) {
@@ -112,23 +111,24 @@ const getContact = async (req, res) => {
 
     // const page = parseInt(req.query.page);
     // const limit = parseInt(req.query.limit);
-    const contacts = await Contacts.find({}, "-__v")
-      .find({ ...query }, { projection: arrayOfValues })
+    const contacts = await Contacts.find({ ...query })
       .sort(sortOptions)
       .skip(skip)
-      .limit(parseInt(limit))
-      .toArray();
+      .limit(parseInt(limit));
 
+    const recCount = await Contacts.countDocuments({
+      ...query,
+    });
     if (contacts.length) {
-      contacts.forEach((element) => {
-        // delete element._doc.__v;
-        element._doc.id = element.id;
-      });
+      // contacts.forEach((element) => {
+      //   element._doc.id = element.id;
+      // });
       return res.status(StatusCodes.OK).json({
         message: `Contacts Loaded Successfully!`,
         statusCode: StatusCodes.OK,
         status: ReasonPhrases.OK,
         result: contacts,
+        total: recCount,
       });
     } else {
       return res.status(StatusCodes.NOT_FOUND).json({
