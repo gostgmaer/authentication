@@ -1,19 +1,13 @@
 const express = require("express");
 require("dotenv").config();
-const connectDB = require("./db/connect");
-const mongoose = require("mongoose");
+const connectDB = require("./src/db/connect");
+const { dbUrl, serverPort } = require("./src/config/setting");
 const app = express();
 var cors = require("cors");
 const session = require("express-session");
-const sessionStore = require("./db/session");
-const authRouter = require("./routes/auth");
-const unauthorized = require("./routes/aunauthorized");
-const contactRoute = require("./routes/contact");
-const resumeRoute = require("./routes/resume");
-const genericRoute = require("./routes/generic");
-const userRoute = require("./routes/user");
-const swaggerUi = require("swagger-ui-express");
-const swaggerSpec = require("./swagger");
+const sessionStore = require("./src/db/session");
+const userRouter = require("./src/routes/user");
+const authRoute = require("./src/routes/auth");
 
 app.use(
   session({
@@ -26,8 +20,6 @@ app.use(
   })
 );
 
-// app.use(sessionMiddleware);
-
 app.use(cors());
 app.use(express.json());
 
@@ -39,26 +31,15 @@ app.get("/api", (req, res) => {
   res.send("API is working!");
 });
 
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.get("/doc/swagger.json", (req, res) => {
-  res.send("./doc/swagger.json");
-});
+app.use("/api", userRouter);
+app.use("/api", authRoute);
 
-//app route
-app.use("/api", authRouter);
-app.use("/api", contactRoute);
-app.use("/api", resumeRoute);
-app.use("/api", userRoute);
-app.use("/api", genericRoute);
-app.use("/api", unauthorized);
 
-//Port and Connect to DB
-
-const port = process.env.PORT || 5000;
+const port = serverPort || 5000;
 const start = async () => {
   try {
-    await connectDB(process.env.MONGO_URL);
+    connectDB(dbUrl);
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
     });
