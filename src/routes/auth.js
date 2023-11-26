@@ -11,7 +11,7 @@ const {
   changedPassword,
   forgetPassword,
   accountConfirm,getProfile,getRefreshToken
-} = require("../controller/authentication/auth");
+} = require("../controller/auth");
 const UpdatebyMiddleWare = require("../middleware/updatedBy");
 const createMiddleWare = require("../middleware/createMiddleWare");
 const userMiddleWare = require("../middleware/userAccess");
@@ -24,7 +24,7 @@ const {
   validateForgetPassword,
   validateResetpassword,
   validateChangePassword
-} = require("../validator/auth");
+} = require("../validators/auth");
 
 
 authRoute.route("/user/auth/register").post(validateSignUpRequest, isRequestValidated,signUp);

@@ -11,7 +11,7 @@ const {
   updateUser,
   getusers,
   deleteUser,getSingleUser
-} = require("../controller/user/user");
+} = require("../controller/user");
 
 userRouter.route("/users").get(adminMiddleware, getusers);
 userRouter.route("/users/:id").get(userMiddleWare,getSingleUser);

@@ -1,4 +1,4 @@
-const { decodeToken } = require("../utils/helper");
+const { decodeToken } = require("../utils/service");
 const User = require("../models/user");
 
 async function createMiddleWare(req, res, next) {

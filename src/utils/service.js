@@ -1,3 +1,6 @@
+const jwt = require("jsonwebtoken");
+const axios = require("axios"); // You may need to install axios
+
 function getAppIdAndEntity(url) {
   // Split the URL by '?' to remove the query part
   const [pathPart] = url.split("?");
@@ -50,15 +53,6 @@ function createProjectionFromArray(fields) {
   }
 }
 
-module.exports = {
-  getAppIdAndEntity,
-  createProjectionFromArray,
-  isemptyObject,
-};
-
-
-const jwt = require("jsonwebtoken");
-const axios = require("axios"); // You may need to install axios
 
 const { jwtSecret } = require("../config/setting");
 
@@ -213,4 +207,7 @@ module.exports = {
   getLocationInfo,
   removeEmptyKeys,
   FilterOptionsSearch,
+  getAppIdAndEntity,
+  createProjectionFromArray,
+  isemptyObject,
 };

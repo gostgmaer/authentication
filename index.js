@@ -1,11 +1,11 @@
 const express = require("express");
 require("dotenv").config();
-const connectDB = require("./src/db/dbConnact");
+const connectDB = require("./src/db/connect");
 const { dbUrl, serverPort } = require("./src/config/setting");
 const app = express();
 var cors = require("cors");
 const session = require("express-session");
-const sessionStore = require("./src/db/sessionConnact");
+const sessionStore = require("./src/db/session");
 const userRouter = require("./src/routes/user");
 const authRoute = require("./src/routes/auth");
 

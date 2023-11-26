@@ -1,5 +1,6 @@
 
-const { decodeToken } = require("../utils/helper");
+const { decodeToken } = require("../utils/service");
+
 async function UpdatebyMiddleWare(req, res, next) {
   // Check if the user has a Bearer token in the Authorization header
   const token = req.headers.authorization;
