@@ -80,4 +80,6 @@ userSchema.method({
     return bcrypt.compare(password, this.hash_password);
   },
 });
+
+
 module.exports = mongoose.model("User", userSchema);

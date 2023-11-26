@@ -8,7 +8,6 @@ const MailGenerator = new Mailgen({
     },
   });
 
-  const MailBody
 
 let EmailBody = MailGenerator.generate(mailBody);
 

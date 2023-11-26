@@ -1,14 +1,14 @@
 const dotenv = require("dotenv");
 const Mailgen = require("mailgen");
-
-dotenv.config();
+const {  emailName,applicaionName } = require("../config/setting");
+  dotenv.config();
 
 function createMailOptions(theme,to, subject, body) {
 
   const MailGenerator = new Mailgen({
     theme: theme,
     product: {
-      name: process.env.APPLICATION_NAME,
+      name: applicaionName,
       link: "https://google.com",
     },
   });
@@ -16,16 +16,8 @@ function createMailOptions(theme,to, subject, body) {
   let EmailBody = MailGenerator.generate(body);
   let emailtext = MailGenerator.generatePlaintext(body);
 
-//   const mailOptions = {
-//     from: process.env.EMAIL_NAME,
-//     to: to,
-//     subject: subject,
-//     html: EmailBody,
-//     text: mailGenerator.generatePlaintext(body),
-//   };
-
   return {
-    from: process.env.EMAIL_NAME,
+    from: emailName,
     to: to,
     subject: subject,
     html: EmailBody,
