@@ -139,7 +139,6 @@ const updateUser = async (req, res) => {
       message: error.message,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       status: ReasonPhrases.INTERNAL_SERVER_ERROR,
-      cause: error,
     });
   }
 };

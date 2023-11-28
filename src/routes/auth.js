@@ -35,7 +35,7 @@ authRoute.route("/user/auth/session/refresh/token").post(getRefreshToken);
 authRoute.route("/user/auth/reset-password/:token").post(validateResetpassword,isRequestValidated,resetPassword);
 authRoute.route("/user/auth/forget-password").post(validateForgetPassword,isRequestValidated,forgetPassword);
 authRoute.route("/user/auth/change-password").post(userMiddleWare,UpdatebyMiddleWare,validateChangePassword,isRequestValidated,changedPassword);
-authRoute.route("/user/auth/profile").get(userMiddleWare,getProfile);
+authRoute.route("/user/auth/profile/:id").get(userMiddleWare,getProfile);
 authRoute.route("/user/auth/logout").post(userMiddleWare,singout);
 
 module.exports = authRoute;
