@@ -31,6 +31,7 @@
     "mongoose-dynamic-schemas": "^1.2.6",
     "nodemailer": "^6.9.5",
     "nodemailer-mandrill-transport": "^1.2.0",
+    "nodemon": "^3.0.2",
     "redis": "^4.6.10",
     "shortid": "^2.2.16",
     "swagger-jsdoc": "^6.2.8",
