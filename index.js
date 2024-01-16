@@ -8,6 +8,7 @@ const session = require("express-session");
 const sessionStore = require("./src/db/session");
 const userRouter = require("./src/routes/user");
 const authRoute = require("./src/routes/auth");
+const genericRoute = require("./src/routes/generic");
 
 app.use(
   session({
@@ -34,6 +35,7 @@ app.get("/api", (req, res) => {
 
 app.use("/api", userRouter);
 app.use("/api", authRoute);
+app.use("/api", genericRoute);
 
 
 const port = serverPort || 5000;

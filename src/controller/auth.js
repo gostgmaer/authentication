@@ -692,7 +692,7 @@ const getProfile = async (req, res) => {
     try {
       const userId = await User.findOne(
         { _id: id },
-        "-__v -hash_password -resetToken -resetTokenExpiration -confirmToken -update_by"
+        "-__v -hash_password -resetToken -resetTokenExpiration -confirmToken -update_by -session -tokens"
       );
 
       if (userId.id) {
