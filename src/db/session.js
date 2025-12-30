@@ -1,9 +1,10 @@
 const session = require("express-session");
+const { dbUrl } = require("../config/setting");
 const mongoSessionStore = require("connect-mongodb-session")(session);
 
 
 const sessionStore = new mongoSessionStore({
-    uri: "mongodb+srv://kishor811:c11yrbZf6MOdj8Ue@test.yrbiejx.mongodb.net/?retryWrites=true&w=majority",
+    uri: dbUrl,
     collection: "sessions",
   });
 
