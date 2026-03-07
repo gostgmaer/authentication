@@ -7,7 +7,7 @@ const {
 const { dbUrl, jwtSecret, refressSecret } = require("../config/setting");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const sessionStore = require("../db/session");
 const createMailOptions = require("../mail/mailOptions");
 const transporter = require("../mail/mailTransporter");
